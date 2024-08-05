@@ -23,8 +23,8 @@ classifiers = [
     "Topic :: Database :: Database Engines/Servers",
     "Topic :: Database :: Front-Ends",
 ]
-requires-python = "==3.9"
-dependencies = ["optimade~=1.1"]
+requires-python = ">=3.9,<3.10"
+dependencies = ["optimade[ase]~=1.1", "tqdm"]
 
 [tool.setuptools]
 license-files = ["LICENSE"]
@@ -33,6 +33,7 @@ license-files = ["LICENSE"]
 version = {attr = "csd_optimade.__version__"}
 
 [tool.setuptools.packages.find]
+where = ["src"]
 namespaces = false
 
 [project.optional-dependencies]
