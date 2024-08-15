@@ -80,13 +80,13 @@ def main():
     from multiprocessing import Pool
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num-threads", type=int, default=4)
+    parser.add_argument("--num-processes", type=int, default=4)
     parser.add_argument("--chunk-size", type=int, default=100)
     parser.add_argument("--total-num", type=int, default=int(1.29e7))
 
     args = parser.parse_args()
 
-    pool_size = args.num_threads
+    pool_size = args.num_processes
     chunk_size = args.chunk_size
     num_chunks = int(args.total_num) // chunk_size
     ranges = (range(i * chunk_size, (i + 1) * chunk_size) for i in range(num_chunks))
