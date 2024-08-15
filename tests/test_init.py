@@ -1,3 +1,5 @@
+from csd_optimade import __version__
+
+
 def test_version():
-    from csd_optimade import __version__
-    assert version
+    assert __version__

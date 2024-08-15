@@ -1,17 +1,19 @@
 from __future__ import annotations
-from collections.abc import Generator
-from optimade.models import StructureResource
-import os
-import itertools
-from optimade.adapters.structures.ase import from_ase_atoms
-import ase.io
-import warnings
-import json
-import tqdm
+
 import io
-import ccdc.entry
+import itertools
+import json
+import os
+import warnings
+from collections.abc import Generator
+
+import ase.io
 import ccdc.crystal
+import ccdc.entry
 import ccdc.io
+import tqdm
+from optimade.adapters.structures.ase import from_ase_atoms
+from optimade.models import StructureResource
 
 
 def from_csd_entry(entry: ccdc.entry.Entry) -> StructureResource:
@@ -29,7 +31,7 @@ def from_csd_entry(entry: ccdc.entry.Entry) -> StructureResource:
 
 def from_csd_database(
     reader, range_=itertools.count()
-) -> Generator[tuple[float, str | Exception]]:
+) -> Generator[str | RuntimeError, None, None]:
     chunked_structures = [entry for entry in [reader[r] for r in range_]]
     for entry in chunked_structures:
         try:
@@ -46,6 +48,8 @@ def from_csd_database(
 def handle_chunk(args):
     run_name = "test"
     chunk_id, range_ = args
+    bad_count: int = 0
+    total_count: int = 0
     with open(f"{run_name}-optimade-{chunk_id}.jsonl", "w") as f:
         desc_string = f"CSD -> OPTIMADE ({chunk_id:7d} (PID: {os.getpid()})"
         with tqdm.tqdm(
@@ -59,6 +63,7 @@ def handle_chunk(args):
         ) as pbar:
             for entry in from_csd_database(ccdc.io.EntryReader("CSD"), range_):
                 if isinstance(entry, Exception):
+                    bad_count += 1
                     pbar.set_description(
                         desc_string
                         + f"({bad_count} bad entries so far: {bad_count/total_count:.2%})"
@@ -67,17 +72,16 @@ def handle_chunk(args):
                 else:
                     f.write(entry + "\n")
                 pbar.update(1)
+                total_count += 1
 
 
 def main():
     from multiprocessing import Pool
-    import sys
 
-    run_name = sys.argv[1]
     pool_size = 4
     chunk_size = 100
     num_chunks = int(1.29e7) // chunk_size
     ranges = (range(i * chunk_size, (i + 1) * chunk_size) for i in range(num_chunks))
 
     with Pool(pool_size) as pool:
-        results = pool.map(handle_chunk, enumerate(ranges), chunksize=1)
+        pool.map(handle_chunk, enumerate(ranges), chunksize=1)

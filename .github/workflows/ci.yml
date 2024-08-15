@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-    - main 
+    - main
     - 'push-action/**'
 
 env:
@@ -51,7 +51,7 @@ jobs:
         submodules: true
         fetch-depth: 2
 
-    - name: Set up Python 
+    - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.9'
@@ -64,4 +64,4 @@ jobs:
         pip install .[dev] --extra-index-url https://pip.ccdc.cam.ac.uk
 
     - name: Run non-server tests
-      run: pytest -rs -vvv 
+      run: pytest -rs -vvv
