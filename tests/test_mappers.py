@@ -1,9 +1,13 @@
 import warnings
 
+import pytest
 import tqdm
 
 
-def test_via_cif_and_ase(same_random_csd_entries):
+def test_via_cif_and_ase(csd_available, same_random_csd_entries):
+    if not csd_available:
+        pytest.skip("CSD not available")
+
     from csd_optimade.mappers import from_csd_entry_via_cif_and_ase
 
     optimades = []

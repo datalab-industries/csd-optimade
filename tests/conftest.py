@@ -2,6 +2,19 @@ import pytest
 
 
 @pytest.fixture(scope="session")
+def csd_available():
+    """Check if the CSD is available."""
+
+    from ccdc import io
+
+    try:
+        io.EntryReader("CSD")
+        return True
+    except Exception:
+        return False
+
+
+@pytest.fixture(scope="session")
 def same_random_csd_entries():
     """Pick some random entries from the CSD, with a fixed seed."""
 

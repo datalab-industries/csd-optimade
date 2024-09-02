@@ -63,5 +63,5 @@ jobs:
         pip install -U setuptools wheel
         pip install .[dev] --extra-index-url https://pip.ccdc.cam.ac.uk
 
-    - name: Run non-server tests
+    - name: Run tests
       run: pytest -rs -vvv
