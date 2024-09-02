@@ -15,8 +15,11 @@ def csd_available():
 
 
 @pytest.fixture(scope="session")
-def same_random_csd_entries():
+def same_random_csd_entries(csd_available):
     """Pick some random entries from the CSD, with a fixed seed."""
+
+    if not csd_available:
+        pytest.skip("CSD not available")
 
     import random
 
