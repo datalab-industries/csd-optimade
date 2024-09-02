@@ -5,9 +5,9 @@ import pytest
 def csd_available():
     """Check if the CSD is available."""
 
-    from ccdc import io
-
     try:
+        from ccdc import io
+
         io.EntryReader("CSD")
         return True
     except (ImportError, Exception):
