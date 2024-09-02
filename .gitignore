@@ -1,0 +1,40 @@
+data/
+
+## Python files
+__pycache__/
+*.py[cod]
+*$py.class
+.mypy_cache
+
+## Packaging
+build/
+dist/
+eggs/
+.eggs/
+sdist/
+wheels/
+*.egg-info/
+*.egg
+
+# Pip logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Testing
+htmlcov/
+.coverage
+.coverage.*
+.cache
+coverage.xml
+.pytest-cache/
+
+# Envs
+.python-version
+.env
+.venv
+.env.local
+env/
+venv/
+ENV/
+.matplotlibrc
+matplotlibrc
