@@ -1,22 +1,17 @@
 from __future__ import annotations
 
 import io
-import itertools
-import json
-import os
 import warnings
-from collections.abc import Generator
 
 import ase.io
 import ccdc.crystal
 import ccdc.entry
 import ccdc.io
-import tqdm
 from optimade.adapters.structures.ase import from_ase_atoms
 from optimade.models import StructureResource
 
 
-def from_csd_entry(entry: ccdc.entry.Entry) -> StructureResource:
+def from_csd_entry_via_cif_and_ase(entry: ccdc.entry.Entry) -> StructureResource:
     cif = entry.crystal.to_string(format="cif")
     warnings.filterwarnings("ignore", category=UserWarning)
     ase_atoms = ase.io.read(io.StringIO(cif), format="cif")
@@ -29,67 +24,34 @@ def from_csd_entry(entry: ccdc.entry.Entry) -> StructureResource:
     )
 
 
-def from_csd_database(
-    reader, range_=itertools.count()
-) -> Generator[str | RuntimeError, None, None]:
-    chunked_structures = [entry for entry in [reader[r] for r in range_]]
-    for entry in chunked_structures:
-        try:
-            optimade = from_csd_entry(entry)
-        except Exception:
-            yield RuntimeError(f"Bad entry: {entry.identifier!r}")
-
-        dct = optimade.model_dump()  # type: ignore
-        dct["attributes"].pop("_ase_spacegroup", None)
-        yield json.dumps(dct)
-
-
-# def handle_chunk(chunk_id: int, range_: Generator = None):
-def handle_chunk(args):
-    run_name = "test"
-    chunk_id, range_ = args
-    bad_count: int = 0
-    total_count: int = 0
-    with open(f"{run_name}-optimade-{chunk_id}.jsonl", "w") as f:
-        desc_string = f"CSD -> OPTIMADE ({chunk_id:7d} (PID: {os.getpid()})"
-        with tqdm.tqdm(
-            iterable=None,
-            total=100,
-            delay=chunk_id,
-            position=chunk_id,
-            maxinterval=0.5,
-            leave=True,
-            desc=desc_string,
-        ) as pbar:
-            for entry in from_csd_database(ccdc.io.EntryReader("CSD"), range_):
-                if isinstance(entry, Exception):
-                    bad_count += 1
-                    pbar.set_description(
-                        desc_string
-                        + f"({bad_count} bad entries so far: {bad_count/total_count:.2%})"
-                    )
-                    continue
-                else:
-                    f.write(entry + "\n")
-                pbar.update(1)
-                total_count += 1
-
-
-def main():
-    import argparse
-    from multiprocessing import Pool
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--num-processes", type=int, default=4)
-    parser.add_argument("--chunk-size", type=int, default=100)
-    parser.add_argument("--total-num", type=int, default=int(1.29e7))
-
-    args = parser.parse_args()
-
-    pool_size = args.num_processes
-    chunk_size = args.chunk_size
-    num_chunks = int(args.total_num) // chunk_size
-    ranges = (range(i * chunk_size, (i + 1) * chunk_size) for i in range(num_chunks))
-
-    with Pool(pool_size) as pool:
-        pool.map(handle_chunk, enumerate(ranges), chunksize=1)
+def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
+    return StructureResource(
+        **{
+            "attributes": {
+                "chemical_formula_descriptive": entry.molecule.formula,
+                "chemical_formula_reduced": entry.molecule.formula,
+                "elements": list(entry.molecule.formula),
+                "nelements": len(entry.molecule.formula),
+                "nperiodic_sites": len(entry.molecule.atoms),
+                "species": [
+                    {
+                        "chemical_symbols": [atom.atomic_symbol],
+                        "name": atom.atomic_symbol,
+                    }
+                    for atom in entry.molecule.atoms
+                ],
+                "lattice_vectors": [
+                    [entry.cell.a, 0, 0],
+                    [0, entry.cell.b, 0],
+                    [0, 0, entry.cell.c],
+                ],
+                "cartesian_site_positions": [
+                    [atom.x, atom.y, atom.z] for atom in entry.molecule.atoms
+                ],
+                "nsites": len(entry.molecule.atoms),
+                "nspecies": len({atom.atomic_symbol for atom in entry.molecule.atoms}),
+            },
+            "id": entry.identifier,
+            "type": "structures",
+        }
+    )

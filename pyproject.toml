@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.scripts]
-csd-ingest = "csd_optimade.mappers:main"
+csd-ingest = "csd_optimade.ingest:cli"
 
 [project.optional-dependencies]
 dev = [
