@@ -10,7 +10,7 @@ def csd_available():
     try:
         io.EntryReader("CSD")
         return True
-    except Exception:
+    except (ImportError, Exception):
         return False
 
 
