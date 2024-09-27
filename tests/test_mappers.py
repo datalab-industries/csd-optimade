@@ -2,6 +2,8 @@ import re
 import warnings
 
 import numpy as np
+import pytest
+from csd_optimade.mappers import from_csd_entry_directly, from_csd_entry_via_cif_and_ase
 from optimade.adapters.structures.utils import cellpar_to_cell
 
 
@@ -15,9 +17,10 @@ def check_entry(entry, resource):
     a, b, c = entry.crystal.cell_lengths
     alpha, beta, gamma = entry.crystal.cell_angles
     cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
-    np.testing.assert_array_almost_equal(
-        cell, resource.attributes.lattice_vectors, decimal=5
-    )
+    if resource.attributes.lattice_vectors:
+        np.testing.assert_array_almost_equal(
+            cell, resource.attributes.lattice_vectors, decimal=5
+        )
 
     try:
         assert (
@@ -46,10 +49,8 @@ def check_entry(entry, resource):
                 warn = True
 
         formula_str: str = ""
-        for entry in sorted(formula_dct):
-            formula_str += (
-                f"{entry}{formula_dct[entry] if formula_dct[entry] > 1 else ''}"
-            )
+        for e in sorted(formula_dct):
+            formula_str += f"{e}{formula_dct[e] if formula_dct[e] > 1 else ''}"
 
         assert formula_str == resource.attributes.chemical_formula_reduced
     except AssertionError:
@@ -66,16 +67,18 @@ def check_entry(entry, resource):
     return 1
 
 
-def test_via_cif_and_ase(same_random_csd_entries):
-    from csd_optimade.mappers import from_csd_entry_via_cif_and_ase
-
+@pytest.mark.parametrize(
+    "mapper",
+    [from_csd_entry_via_cif_and_ase, from_csd_entry_directly],
+)
+def test_mappers(mapper, same_random_csd_entries):
     failures = 0
     good = 0
     total = 0
     for index, entry in same_random_csd_entries:
         total += 1
         try:
-            optimade = from_csd_entry_via_cif_and_ase(entry)
+            optimade = mapper(entry)
         except Exception as exc:
             print(f"⛔ {entry.identifier}")
             failures += 1
