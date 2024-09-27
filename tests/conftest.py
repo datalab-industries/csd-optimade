@@ -26,7 +26,7 @@ def same_random_csd_entries(csd_available):
     from ccdc.io import EntryReader
 
     random.seed(0)
-    entry_indices = []
+    entry_indices = set()
     entries = []
     num_entries: int = 100
     max_n: int = int(1.29e6)
@@ -39,7 +39,7 @@ def same_random_csd_entries(csd_available):
                     entry = reader[i]
                     if entry:
                         entries.append((i, entry))
-                        entry_indices.append(i)
+                        entry_indices.add(i)
                 except Exception:
                     continue
         yield entries
