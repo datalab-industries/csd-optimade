@@ -8,7 +8,9 @@ from optimade.adapters.structures.utils import cellpar_to_cell
 def check_entry(entry, resource):
     warn = False
     assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
-    total_num_atoms = entry.crystal.z_value * len(entry.molecule.atoms)
+    total_num_atoms = entry.crystal.z_value * len(
+        entry.crystal.asymmetric_unit_molecule.atoms
+    )
 
     a, b, c = entry.crystal.cell_lengths
     alpha, beta, gamma = entry.crystal.cell_angles
@@ -27,7 +29,11 @@ def check_entry(entry, resource):
 
     try:
         formula_dct = {}
-        for e in entry.molecule.formula.strip("(").strip(")n").split(" "):
+        for e in (
+            entry.crystal.asymmetric_unit_molecule.formula.strip("(")
+            .strip(")n")
+            .split(" ")
+        ):
             matches = re.match(r"([a-zA-Z]+)([0-9]*)", e)
             if matches:
                 species, count = matches.groups()
