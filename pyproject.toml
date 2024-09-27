@@ -10,10 +10,7 @@ dynamic = ["version"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Topic :: Database",
@@ -21,11 +18,12 @@ classifiers = [
     "Topic :: Database :: Database Engines/Servers",
     "Topic :: Database :: Front-Ends",
 ]
-requires-python = ">=3.9,<3.10"
+requires-python = ">= 3.11, < 3.12"
 dependencies = [
-    "optimade[ase]~=1.1",
-    "tqdm",
-    "csd-python-api",
+    "optimade[ase] ~= 1.1",
+    "optimade-maker ~= 0.3",
+    "tqdm ~= 4.66",
+    "csd-python-api ~= 3.2",  # requires https://pip.ccdc.cam.ac.uk registry
 ]
 
 [project.scripts]
