@@ -9,7 +9,7 @@ on:
 
 env:
   PYTEST_ADDOPTS: "--color=yes"
-  LINTING_PY_VERSION: "3.9"  # The version of Python to use for linting (typically the minimum supported)
+  LINTING_PY_VERSION: "3.11"  # The version of Python to use for linting (typically the minimum supported)
 
 # Cancel running workflows when additional changes are pushed
 # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#example-using-a-fallback-value
@@ -31,16 +31,18 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: ${{ env.LINTING_PY_VERSION }}
-        cache: 'pip'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -U setuptools wheel
-        pip install .[dev] --extra-index-url https://pip.ccdc.cam.ac.uk
+    - name: Set up uv 
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "0.4.x"
+        enable-cache: true
+
+    - name: Install latest compatible versions of immediate dependencies
+      run: uv sync --all-extras
 
     - name: Run pre-commit
-      run: pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
+      run: uv run pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
 
   pytest:
     runs-on: ubuntu-latest
@@ -54,14 +56,16 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: '3.9'
-        cache: 'pip'
+        python-version: '3.11'
+
+    - name: Set up uv 
+      uses: astral-sh/setup-uv@v3
+      with:
+        version: "0.4.x"
+        enable-cache: true
 
     - name: Install latest compatible versions of immediate dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -U setuptools wheel
-        pip install .[dev] --extra-index-url https://pip.ccdc.cam.ac.uk
+      run: uv sync --all-extras
 
     - name: Run tests
-      run: pytest -rs -vvv
+      run: uv run pytest -rs -vvv
