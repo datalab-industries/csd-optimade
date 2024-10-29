@@ -3,8 +3,9 @@ import warnings
 
 import numpy as np
 import pytest
-from csd_optimade.mappers import from_csd_entry_directly, from_csd_entry_via_cif_and_ase
 from optimade.adapters.structures.utils import cellpar_to_cell
+
+from csd_optimade.mappers import from_csd_entry_directly, from_csd_entry_via_cif_and_ase
 
 
 def check_entry(entry, resource):

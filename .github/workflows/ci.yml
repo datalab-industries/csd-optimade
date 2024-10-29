@@ -32,7 +32,7 @@ jobs:
       with:
         python-version: ${{ env.LINTING_PY_VERSION }}
 
-    - name: Set up uv 
+    - name: Set up uv
       uses: astral-sh/setup-uv@v3
       with:
         version: "0.4.x"
@@ -58,7 +58,7 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Set up uv 
+    - name: Set up uv
       uses: astral-sh/setup-uv@v3
       with:
         version: "0.4.x"

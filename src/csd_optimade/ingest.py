@@ -20,7 +20,7 @@ def from_csd_database(
     reader: ccdc.io.EntryReader,
     range_: Generator = itertools.count(),  # type: ignore
     mapper: Callable[[ccdc.entry.Entry], StructureResource] = from_csd_entry_directly,
-) -> Generator[str | RuntimeError, None, None]:
+) -> Generator[str | RuntimeError]:
     """Loop through a chunk of the entry reader and map the entries to OPTIMADE structures."""
     chunked_structures = [entry for entry in [reader[r] for r in range_]]
     for entry in chunked_structures:
@@ -58,7 +58,7 @@ def cli():
     parser = argparse.ArgumentParser()
     parser.add_argument("--num-processes", type=int, default=4)
     parser.add_argument("--chunk-size", type=int, default=10000)
-    parser.add_argument("--total-num", type=int, default=int(1.29e7))
+    parser.add_argument("--num-structures", type=int, default=int(1.29e7))
     parser.add_argument("--run-name", type=str)
 
     args = parser.parse_args()
@@ -102,8 +102,10 @@ def cli():
 
     with open(output_file, "w") as outfile:
         for filename in input_files:
-            with open(filename, "r") as infile:
+            with open(filename) as infile:
                 outfile.write(infile.read())
             outfile.write("\n")
 
-            print(f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024 ** 2:.1f} MB)")
+            print(
+                f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024 ** 2:.1f} MB)"
+            )
