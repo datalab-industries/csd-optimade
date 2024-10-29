@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import glob
 import itertools
+import json
 import os
 from collections.abc import Generator
 from functools import partial
@@ -12,6 +13,7 @@ import ccdc.entry
 import ccdc.io
 import tqdm
 from optimade.models import StructureResource
+from optimade_maker.convert import _construct_entry_type_info
 
 from csd_optimade.mappers import from_csd_entry_directly
 
@@ -57,19 +59,16 @@ def cli():
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--num-processes", type=int, default=4)
-    parser.add_argument("--chunk-size", type=int, default=10000)
+    parser.add_argument("--chunk-size", type=int, default=10_000)
     parser.add_argument("--num-structures", type=int, default=int(1.29e7))
-    parser.add_argument("--run-name", type=str)
+    parser.add_argument("--run-name", type=str, default="csd")
 
     args = parser.parse_args()
 
     pool_size = args.num_processes
     chunk_size = args.chunk_size
-    num_chunks = int(args.total_num) // chunk_size
+    num_chunks = int(args.num_structures) // chunk_size
     run_name = args.run_name
-
-    if run_name is None:
-        run_name = "csd-"
 
     ranges = (range(i * chunk_size, (i + 1) * chunk_size) for i in range(num_chunks))
 
@@ -100,12 +99,23 @@ def cli():
         key=lambda x: int(x.split("-")[-1].split(".")[0]),
     )
 
-    with open(output_file, "w") as outfile:
+    with open(output_file, "w") as jsonl:
+        # Write headers
+        jsonl.write(
+            json.dumps({"x-optimade": {"meta": {"api_version": "1.1.0"}}}) + "\n"
+        )
+        jsonl.write(
+            _construct_entry_type_info(
+                "structures", properties=[], provider_prefix=""
+            ).model_dump_json()
+            + "\n"
+        )
+
         for filename in input_files:
             with open(filename) as infile:
-                outfile.write(infile.read())
-            outfile.write("\n")
+                jsonl.write(infile.read())
+            jsonl.write("\n")
 
-            print(
-                f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024 ** 2:.1f} MB)"
-            )
+        print(
+            f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024 ** 2:.1f} MB)"
+        )
