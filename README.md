@@ -19,7 +19,8 @@ pip install . --extra-index-url https://pip.ccdc.cam.ac.uk
 ```
 
 Note that the extra index URL is required to install the `csd-python-api` package.
-Any attempts to use CSD data will additionally require a CSD license and [appropriate configuration](https://downloads.ccdc.cam.ac.uk/documentation/API/installation_notes.html#installation-options).
+Any attempts to use CSD data will additionally require a CSD license and
+[appropriate configuration](https://downloads.ccdc.cam.ac.uk/documentation/API/installation_notes.html#installation-options).
 
 ## Usage
 
@@ -35,14 +36,19 @@ This will use multiple processes (controlled by `--num-processes`) to ingest the
 local copy of the CSD database in chunks of size `--chunk-size` until the target
 `--num-structures` has been reached (defaults to the entire CSD).
 Each batch will be written to an [OPTIMADE JSONLines file](https://github.com/Materials-Consortia/OPTIMADE/pull/531),
-and combined into a single JSONLines on completion, with name
+and combined into a single JSONLines file (~ 5.5 GB for the entire CSD, or 2 GB compressed) on completion, with name
 `<--run-name>-optimade.jsonl`.
+
+Depending on parallelisation, this process should take a few minutes to ingest
+the entire CSD on consumer hardware (around 10 minutes with 8 processes on an AMD Ryzen 7 PRO 7840U mobile
+processor, requiring around 3 GB of RAM per process with the default chunk size of 100k).
 
 ### Creating an OPTIMADE API
 
 The `csd-serve` entrypoint provides a thin wrapper around the
 [`optimade-maker`](https://github.com/materialscloud-org/optimade-maker/) tool,
-and bundles the simple configuration required to launch a local OPTIMADE API.
+and bundles the simple configuration required to launch a local OPTIMADE API
+with a simple in-memory database.
 Just provide the path to your combined OPTIMADE JSONLines file:
 
 ```shell
