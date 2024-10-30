@@ -1,8 +1,15 @@
 # CSD OPTIMADE API
 
-This repo contains some prototyping work on creating an OPTIMADE API for
-searching and accessing structures from the Cambridge Structural Database (CSD)
-via the CSD Python API.
+This repo contains prototyping work for creating an [OPTIMADE
+API](https://optimade.org) for searching and accessing structures
+from the [Cambridge Structural Database (CSD)](https://www.ccdc.cam.ac.uk/structures).
+
+The structures are accessed via the [CSD Python
+API](https://downloads.ccdc.cam.ac.uk/documentation/API/) and cast to the
+OPTIMADE format; the
+[`optimade-maker`](https://github.com/materialscloud-org/optimade-maker/) and
+[`optimade-python-tools`](https://github.com/Materials-Consortia/optimade-python-tools/)
+are then used to launch a local OPTIMADE API.
 
 ## Installation
 
@@ -48,7 +55,8 @@ processor, requiring around 3 GB of RAM per process with the default chunk size 
 The `csd-serve` entrypoint provides a thin wrapper around the
 [`optimade-maker`](https://github.com/materialscloud-org/optimade-maker/) tool,
 and bundles the simple configuration required to launch a local OPTIMADE API
-with a simple in-memory database.
+with a simple in-memory database (if `--mongo-uri` is provided, a real MongoDB
+backend will be used).
 Just provide the path to your combined OPTIMADE JSONLines file:
 
 ```shell
@@ -61,3 +69,7 @@ with a tool like `curl`:
 ```shell
 curl http://localhost:5000/structures?filter=elements HAS "C"
 ```
+
+## Funding
+
+This project was developed by [datalab industries ltd.](https://datalab.industries), on behalf of the UK's [Physical Sciences Data Infrastructure (PSDI)](https://psdi.ac.uk), supported by the [Cambridge Crystallographic Data Centre (CCDC)](https://www.ccdc.cam.ac.uk/).
