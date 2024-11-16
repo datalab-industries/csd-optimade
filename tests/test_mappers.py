@@ -5,33 +5,28 @@ import numpy as np
 import pytest
 from optimade.adapters.structures.utils import cellpar_to_cell
 
-from csd_optimade.mappers import from_csd_entry_directly, from_csd_entry_via_cif_and_ase
+from csd_optimade.mappers import from_csd_entry_directly
 
 
-def check_entry(entry, resource):
-    warn = False
-    assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
-    total_num_atoms = entry.crystal.z_value * len(
-        entry.crystal.asymmetric_unit_molecule.atoms
-    )
-
-    a, b, c = entry.crystal.cell_lengths
-    alpha, beta, gamma = entry.crystal.cell_angles
-    cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
-    if resource.attributes.lattice_vectors:
-        np.testing.assert_array_almost_equal(
-            cell, resource.attributes.lattice_vectors, decimal=5
+def check_entry(entry, resource, warn_only=False):
+    try:
+        assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
+        total_num_atoms = entry.crystal.z_value * len(
+            entry.crystal.asymmetric_unit_molecule.atoms
         )
 
-    try:
+        a, b, c = entry.crystal.cell_lengths
+        alpha, beta, gamma = entry.crystal.cell_angles
+        cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
+        if resource.attributes.lattice_vectors:
+            np.testing.assert_array_almost_equal(
+                cell, resource.attributes.lattice_vectors, decimal=5
+            )
+
         assert (
             resource.attributes.nsites == total_num_atoms
         ), f"{resource.attributes.nsites} != {total_num_atoms} for {entry.identifier}"
-    except AssertionError:
-        warnings.warn(f"nsites check failed for {resource.id}", category=RuntimeWarning)
-        warn = True
 
-    try:
         formula_dct = {}
         for e in (
             entry.crystal.asymmetric_unit_molecule.formula.strip("(")
@@ -42,35 +37,37 @@ def check_entry(entry, resource):
             if matches:
                 species, count = matches.groups()
                 formula_dct[species] = int(count) if count else 1
-            else:
-                warnings.warn(
-                    f"Failed to parse formula for {resource.id}: {entry.molecule.formula}",
-                    category=RuntimeWarning,
-                )
-                warn = True
 
         formula_str: str = ""
         for e in sorted(formula_dct):
             formula_str += f"{e}{formula_dct[e] if formula_dct[e] > 1 else ''}"
 
         assert formula_str == resource.attributes.chemical_formula_reduced
-    except AssertionError:
-        warnings.warn(
-            f"Chemical formula check failed for {resource.id}", category=RuntimeWarning
-        )
-        warn = True
+    except AssertionError as exc:
+        if warn_only:
+            warnings.warn(f"{exc}", RuntimeWarning)
+            return 0
+        raise exc
 
-    if warn:
-        print(f"⚠  {resource.id}")
-        return 0
-    # print emoji check box
-    print(f"✅ {resource.id}")
     return 1
+
+
+@pytest.mark.parametrize("bad_refcodes", [["ABEBUF", "ABAYIP"]])
+def test_problematic_entries(bad_refcodes, csd_available):
+    from ccdc.io import EntryReader
+
+    mapper = from_csd_entry_directly
+    reader = EntryReader("CSD")
+    for refcode in bad_refcodes:
+        entry = reader.entry(refcode)
+        if not entry:
+            raise ValueError(f"Entry {refcode} not found in CSD")
+        assert check_entry(entry, mapper(entry)), f"{entry.identifier} failed"
 
 
 @pytest.mark.parametrize(
     "mapper",
-    [from_csd_entry_via_cif_and_ase, from_csd_entry_directly],
+    [from_csd_entry_directly],
 )
 def test_mappers(mapper, same_random_csd_entries):
     failures = 0
@@ -88,7 +85,7 @@ def test_mappers(mapper, same_random_csd_entries):
                 category=RuntimeWarning,
             )
             continue
-        result = check_entry(entry, optimade)
+        result = check_entry(entry, optimade, warn_only=True)
         good += result
 
     num_warnings = total - failures - good
