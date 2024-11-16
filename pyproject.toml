@@ -20,8 +20,8 @@ classifiers = [
 ]
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
-    "optimade[ase] ~= 1.1",
-    "optimade-maker @ git+https://github.com/materialscloud-org/optimade-maker.git@ml-evs/looser-deps",
+    "optimade ~= 1.1",
+    "optimade-maker @ git+https://github.com/materialscloud-org/optimade-maker.git@main",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
     "csd-python-api >= 3, < 4",  # requires https://pip.ccdc.cam.ac.uk registry
