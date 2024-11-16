@@ -1,29 +1,12 @@
 from __future__ import annotations
 
 import datetime
-import io
 import math
-import warnings
 
-import ase.io
 import ccdc.crystal
 import ccdc.entry
 import ccdc.io
-from optimade.adapters.structures.ase import from_ase_atoms
-from optimade.models import StructureResource
-
-
-def from_csd_entry_via_cif_and_ase(entry: ccdc.entry.Entry) -> StructureResource:
-    cif = entry.crystal.to_string(format="cif")
-    warnings.filterwarnings("ignore", category=UserWarning)
-    ase_atoms = ase.io.read(io.StringIO(cif), format="cif")
-    return StructureResource(
-        **{
-            "attributes": from_ase_atoms(ase_atoms),
-            "id": entry.identifier,
-            "type": "structures",
-        }
-    )
+from optimade.models import Species, StructureResource, StructureResourceAttributes
 
 
 def _reduce_csd_formula(formula: str) -> str:
@@ -50,24 +33,33 @@ def _reduce_csd_formula(formula: str) -> str:
 def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
     asym_unit = entry.crystal.asymmetric_unit_molecule
     elements = {d.atomic_symbol for d in asym_unit.atoms}
-    return StructureResource(
+    try:
+        positions = [
+            [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
+            for atom in asym_unit.atoms
+        ]
+    except AttributeError:
+        positions = None
+    resource = StructureResource(
         **{
-            "attributes": {
-                "last_modified": datetime.datetime.now().isoformat(),
-                "chemical_formula_descriptive": asym_unit.formula.replace(" ", ""),
-                "chemical_formula_reduced": _reduce_csd_formula(asym_unit.formula),
-                "elements": sorted(list(elements)),
-                "nelements": len(elements),
-                "nsites": len(asym_unit.atoms),
-                "species": [
-                    {
-                        "chemical_symbols": [e],
-                        "name": e,
-                        "concentration": [1.0],
-                    }
+            "id": entry.identifier,
+            "type": "structures",
+            "attributes": StructureResourceAttributes(
+                last_modified=datetime.datetime.now().isoformat(),
+                chemical_formula_descriptive=asym_unit.formula.replace(" ", ""),
+                chemical_formula_reduced=_reduce_csd_formula(asym_unit.formula),
+                elements=sorted(list(elements)),
+                dimension_types=(1, 1, 1),
+                nperiodic_dimensions=3,
+                nelements=len(elements),
+                nsites=len(asym_unit.atoms),
+                species=[
+                    Species(chemical_symbols=[e], name=e, concentration=[1.0])
                     for e in elements
-                ],
-                "_csd_lattice_parameters": [
+                ]
+                if positions
+                else None,
+                _csd_lattice_parameters=[
                     [
                         entry.crystal.cell_lengths.a,
                         entry.crystal.cell_lengths.b,
@@ -79,15 +71,15 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
                         entry.crystal.cell_angles.gamma,
                     ],
                 ],
-                "_csd_deposit_date": entry.deposition_date.isoformat(),
-                "species_at_sites": [atom.atomic_symbol for atom in asym_unit.atoms],
-                "cartesian_site_positions": [
-                    [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
-                    for atom in asym_unit.atoms
-                ],
-                "structure_features": [],
-            },
-            "id": entry.identifier,
-            "type": "structures",
+                _csd_deposit_date=entry.deposition_date.isoformat()
+                if entry.deposition_date
+                else None,
+                cartesian_site_positions=positions,
+                species_at_sites=[atom.atomic_symbol for atom in asym_unit.atoms]
+                if positions
+                else None,
+                structure_features=[],
+            ),
         }
     )
+    return resource
