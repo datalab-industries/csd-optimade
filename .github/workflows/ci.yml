@@ -39,7 +39,7 @@ jobs:
         enable-cache: true
 
     - name: Install latest compatible versions of immediate dependencies
-      run: uv sync --all-extras
+      run: uv sync --all-extras --extra-index-url https://pip.ccdc.cam.ac.uk
 
     - name: Run pre-commit
       run: uv run pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
@@ -65,7 +65,7 @@ jobs:
         enable-cache: true
 
     - name: Install latest compatible versions of immediate dependencies
-      run: uv sync --all-extras
+      run: uv sync --all-extras --extra-index-url https://pip.ccdc.cam.ac.uk
 
     - name: Run tests
       run: uv run pytest -rs -vvv
