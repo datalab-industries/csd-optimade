@@ -51,5 +51,6 @@ def cli():
         args.port,
         mongo_uri=mongo_uri,
         database_backend="mongodb" if mongo_uri else "mongomock",
+        create_default_index=True,
     )
     optimake_server.start_api()
