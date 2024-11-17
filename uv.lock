@@ -185,8 +185,9 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "csd-python-api" },
-    { name = "optimade", extra = ["ase"] },
+    { name = "optimade" },
     { name = "optimade-maker" },
+    { name = "pymongo" },
     { name = "tqdm" },
 ]
 
@@ -201,11 +202,12 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "csd-python-api", specifier = ">=3" },
+    { name = "csd-python-api", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
-    { name = "optimade", extras = ["ase"], specifier = "~=1.1" },
-    { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Flooser-deps" },
+    { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main" },
+    { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
+    { name = "pymongo", specifier = ">=4,<5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.2,<9.0" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=4,<6" },
     { name = "ruff", marker = "extra == 'dev'", specifier = "~=0.5" },
@@ -734,17 +736,13 @@ wheels = [
 
 [[package]]
 name = "optimade"
-version = "1.1.3"
-source = { registry = "https://pypi.org/simple" }
+version = "1.1.4"
+source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main#f34cff3c4cdae44a88e82d95437f4090b91fda5d" }
 dependencies = [
     { name = "lark" },
     { name = "pydantic", extra = ["email"] },
     { name = "pydantic-settings" },
     { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/2b/f8/800dc10aa923122481686119030bdb92d53b3fed735c54b44b422ff6be60/optimade-1.1.3.tar.gz", hash = "sha256:ff4a27cf5822e9f15666173f620c8b98863c0a8f8cc93eb9ccaeb8dac69e910d", size = 184842 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/ac/a9fb83fe8e25a8bfdc98d6494506fbb338273cd5c6b602afbb73702ccfe5/optimade-1.1.3-py3-none-any.whl", hash = "sha256:58883b1d1f58de42e5bdfe78d4295f811718ea489655c033808bc5aeceb90688", size = 232366 },
 ]
 
 [package.optional-dependencies]
@@ -763,13 +761,12 @@ server = [
 [[package]]
 name = "optimade-maker"
 version = "0.3.0"
-source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Flooser-deps#7b43b0eed07c6eb0f1d352a3876698260671fcaa" }
+source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server#f43086f2952f97743b2e78d7f9c1f90e06a0f027" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
     { name = "optimade", extra = ["ase", "server"] },
     { name = "pandas" },
-    { name = "pybtex" },
     { name = "pydantic" },
     { name = "pymatgen" },
     { name = "pyyaml" },
