@@ -1,4 +1,10 @@
-# CSD OPTIMADE API
+<div align="center" style="padding: 2em;">
+<span style="padding: 1em">
+<img height="70px" align="center" src="https://matsci.org/uploads/default/original/2X/b/bd2f59b3bf14fb046b74538750699d7da4c19ac1.svg">
+</span>
+</div>
+
+# <div align="center">CSD OPTIMADE API</div>
 
 This repo contains prototyping work for creating an [OPTIMADE
 API](https://optimade.org) for searching and accessing structures
@@ -11,23 +17,38 @@ OPTIMADE format; the
 [`optimade-python-tools`](https://github.com/Materials-Consortia/optimade-python-tools/)
 are then used to launch a local OPTIMADE API.
 
+## Roadmap
+
+Estimated date for completion: March 2025.
+
+- [x] Set up ingestion pipeline for CSD database to allow querying via local OPTIMADE API.
+- [ ] Collaborate on and collate cheminformatics property definitions as part of wider [OPTIMADE cheminformatics initiative](https://github.com/Materials-Consortia/namespace-cheminformatics/).
+- [ ] Get feedback on pipeline for correctness/robustness, and incrementally deal with problematic cases.
+- [ ] Deploy ingestion service behind PSDI authentication gateway as a data service that can be used by e.g., cross-search platform, that updates on each CSD data release.
+
+
 ## Installation
 
 After cloning this repository and using some appropriate method of creating a virtual environment (current recommendation is [`uv`](https://github.com/astral-sh/uv)), this package can be installed with
 
 ```shell
-uv sync
+git clone git@github.com:datalab-industries/csd-optimade
+cd csd-optimade
+uv sync --extra-index-url https://pip.ccdc.cam.ac.uk
 ```
 
 or
 
 ```shell
+git clone git@github.com:datalab-industries/csd-optimade
+cd csd-optimade
 pip install . --extra-index-url https://pip.ccdc.cam.ac.uk
 ```
 
 Note that the extra index URL is required to install the `csd-python-api` package.
-Any attempts to use CSD data will additionally require a CSD license and
-[appropriate configuration](https://downloads.ccdc.cam.ac.uk/documentation/API/installation_notes.html#installation-options).
+
+> [!IMPORTANT]  
+>  Any attempts to use CSD data will additionally require a CSD license and [appropriate configuration](https://downloads.ccdc.cam.ac.uk/documentation/API/installation_notes.html#installation-options).
 
 ## Usage
 
@@ -70,6 +91,18 @@ with a tool like `curl`:
 curl http://localhost:5000/structures?filter=elements HAS "C"
 ```
 
+## Contributing and Getting Help
+
+All development of this package (bug reports, suggestions, feedback and pull requests) occurs in the [csd-optimade GitHub repository](https://github.com/datalab-industries/csd-optimade).
+Contribution guidelines and tips for getting help can be found in the [contributing notes](CONTRIBUTING.md).
+
+
 ## Funding
 
 This project was developed by [datalab industries ltd.](https://datalab.industries), on behalf of the UK's [Physical Sciences Data Infrastructure (PSDI)](https://psdi.ac.uk), supported by the [Cambridge Crystallographic Data Centre (CCDC)](https://www.ccdc.cam.ac.uk/).
+
+
+<div align="center">
+<a href="https://psdi.ac.uk"><img src='https://github.com/user-attachments/assets/19d8a74d-f3d0-4825-8a71-4eba1b6392de' width=400/></a>
+</div>
+
