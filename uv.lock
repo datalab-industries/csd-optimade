@@ -737,7 +737,7 @@ wheels = [
 [[package]]
 name = "optimade"
 version = "1.1.4"
-source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main#f34cff3c4cdae44a88e82d95437f4090b91fda5d" }
+source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main#03cd11c065eb73beed4ee240af7f65eca3648866" }
 dependencies = [
     { name = "lark" },
     { name = "pydantic", extra = ["email"] },
@@ -761,7 +761,7 @@ server = [
 [[package]]
 name = "optimade-maker"
 version = "0.3.0"
-source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server#f43086f2952f97743b2e78d7f9c1f90e06a0f027" }
+source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server#7148425c5cf7af86f5ae0437434e9f186b7797e0" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
