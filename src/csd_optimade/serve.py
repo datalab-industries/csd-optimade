@@ -74,7 +74,7 @@ def cli():
         provider={
             "prefix": "csd",
             "name": "Cambridge Structural Database",
-            "description": "A database of crystal structures.",
+            "description": "A database of crystal structures curated by the Cambridge Crystallographic Data Centre.",
         },
     )
     optimake_server.start_api()
