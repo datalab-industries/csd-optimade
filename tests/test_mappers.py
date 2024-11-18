@@ -5,8 +5,6 @@ import numpy as np
 import pytest
 from optimade.adapters.structures.utils import cellpar_to_cell
 
-from csd_optimade.mappers import from_csd_entry_directly
-
 
 def check_entry(entry, resource, warn_only=False):
     try:
@@ -59,6 +57,8 @@ def test_problematic_entries(bad_refcodes, csd_available):
 
     from ccdc.io import EntryReader
 
+    from csd_optimade.mappers import from_csd_entry_directly
+
     mapper = from_csd_entry_directly
     reader = EntryReader("CSD")
     for refcode in bad_refcodes:
@@ -68,11 +68,10 @@ def test_problematic_entries(bad_refcodes, csd_available):
         assert check_entry(entry, mapper(entry)), f"{entry.identifier} failed"
 
 
-@pytest.mark.parametrize(
-    "mapper",
-    [from_csd_entry_directly],
-)
 def test_mappers(mapper, same_random_csd_entries):
+    from csd_optimade.mappers import from_csd_entry_directly
+
+    mapper = from_csd_entry_directly
     failures = 0
     good = 0
     total = 0
