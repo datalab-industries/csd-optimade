@@ -54,6 +54,9 @@ def check_entry(entry, resource, warn_only=False):
 
 @pytest.mark.parametrize("bad_refcodes", [["ABEBUF", "ABAYIP"]])
 def test_problematic_entries(bad_refcodes, csd_available):
+    if not csd_available:
+        pytest.skip("CSD not available")
+
     from ccdc.io import EntryReader
 
     mapper = from_csd_entry_directly
