@@ -6,6 +6,7 @@ import json
 import os
 from collections.abc import Generator
 from functools import partial
+from pathlib import Path
 from typing import Callable
 
 import ccdc.crystal
@@ -112,9 +113,11 @@ def cli():
         )
 
         for filename in input_files:
-            with open(filename) as infile:
+            file = Path(filename)
+            with open(file) as infile:
                 jsonl.write(infile.read())
             jsonl.write("\n")
+            file.unlink()
 
         print(
             f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024 ** 2:.1f} MB)"
