@@ -45,14 +45,14 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
             "id": entry.identifier,
             "type": "structures",
             "attributes": StructureResourceAttributes(
-                last_modified=datetime.datetime.now().isoformat(),
+                last_modified=datetime.datetime.now(),
                 chemical_formula_descriptive=asym_unit.formula.replace(" ", ""),
                 chemical_formula_reduced=_reduce_csd_formula(asym_unit.formula),
                 elements=sorted(list(elements)),
                 dimension_types=(1, 1, 1),
                 nperiodic_dimensions=3,
                 nelements=len(elements),
-                nsites=len(asym_unit.atoms),
+                nsites=len(positions) if positions else None,
                 species=[
                     Species(chemical_symbols=[e], name=e, concentration=[1.0])
                     for e in elements
@@ -71,7 +71,8 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
                         entry.crystal.cell_angles.gamma,
                     ],
                 ],
-                _csd_deposit_date=entry.deposition_date.isoformat()
+                _csd_ccdc_number=entry.ccdc_number,
+                _csd_deposition_date=entry.deposition_date
                 if entry.deposition_date
                 else None,
                 cartesian_site_positions=positions,

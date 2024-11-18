@@ -52,5 +52,29 @@ def cli():
         mongo_uri=mongo_uri,
         database_backend="mongodb" if mongo_uri else "mongomock",
         create_default_index=True,
+        provider_fields={
+            "structures": [
+                {
+                    "name": "_csd_lattice_parameters",
+                    "type": "float",
+                    "description": "The ((a, b, c), (alpha, beta, gamma)) unit cell parameters.",
+                },
+                {
+                    "name": "_csd_deposition_date",
+                    "type": "timestamp",
+                    "description": "The date the structure was deposited.",
+                },
+                {
+                    "name": "_csd_ccdc_number",
+                    "type": "integer",
+                    "description": "The CCDC deposition ID.",
+                },
+            ]
+        },
+        provider={
+            "prefix": "csd",
+            "name": "Cambridge Structural Database",
+            "description": "A database of crystal structures.",
+        },
     )
     optimake_server.start_api()
