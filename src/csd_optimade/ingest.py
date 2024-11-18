@@ -68,10 +68,12 @@ def cli():
 
     pool_size = args.num_processes
     chunk_size = args.chunk_size
-    if chunk_size < int(args.num_structures):
+    if chunk_size > int(args.num_structures):
         chunk_size = int(args.num_structures)
+        num_chunks = 1
+    else:
+        num_chunks = int(args.num_structures) // chunk_size
 
-    num_chunks = int(args.num_structures) // chunk_size
     run_name = args.run_name
 
     ranges = (range(i * chunk_size, (i + 1) * chunk_size) for i in range(num_chunks))
