@@ -40,12 +40,18 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
         ]
     except AttributeError:
         positions = None
+    now = datetime.datetime.now()
+    now = now.replace(microsecond=0)
+    dep_date: datetime.datetime | datetime.date | None = entry.deposition_date
+    dep_date = (
+        datetime.datetime.fromisoformat(dep_date.isoformat()) if dep_date else None
+    )
     resource = StructureResource(
         **{
             "id": entry.identifier,
             "type": "structures",
             "attributes": StructureResourceAttributes(
-                last_modified=datetime.datetime.now(),
+                last_modified=now,
                 chemical_formula_descriptive=asym_unit.formula.replace(" ", ""),
                 chemical_formula_reduced=_reduce_csd_formula(asym_unit.formula),
                 elements=sorted(list(elements)),
@@ -72,9 +78,7 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
                     ],
                 ],
                 _csd_ccdc_number=entry.ccdc_number,
-                _csd_deposition_date=entry.deposition_date
-                if entry.deposition_date
-                else None,
+                _csd_deposition_date={"$date": dep_date},
                 cartesian_site_positions=positions,
                 species_at_sites=[atom.atomic_symbol for atom in asym_unit.atoms]
                 if positions
