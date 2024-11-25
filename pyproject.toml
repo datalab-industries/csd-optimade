@@ -24,7 +24,6 @@ dependencies = [
     "optimade-maker @ git+https://github.com/materialscloud-org/optimade-maker.git@ml-evs/qol-server",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
-    "csd-python-api >= 3, < 4",  # requires https://pip.ccdc.cam.ac.uk registry
 ]
 
 [project.scripts]
@@ -38,6 +37,10 @@ dev = [
     "mypy ~= 1.0",
     "pre-commit ~= 3.0",
     "ruff ~= 0.5",
+]
+
+ingest = [
+    "csd-python-api >= 3, < 4",  # requires https://pip.ccdc.cam.ac.uk registry
 ]
 
 [build-system]

@@ -184,7 +184,6 @@ name = "csd-optimade"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "csd-python-api" },
     { name = "optimade" },
     { name = "optimade-maker" },
     { name = "pymongo" },
@@ -199,10 +198,13 @@ dev = [
     { name = "pytest-cov" },
     { name = "ruff" },
 ]
+ingest = [
+    { name = "csd-python-api" },
+]
 
 [package.metadata]
 requires-dist = [
-    { name = "csd-python-api", specifier = ">=3,<4" },
+    { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
     { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main" },
     { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server" },
