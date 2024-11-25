@@ -93,7 +93,10 @@ def cli():
                 total_bad += bad_count
                 total += total_count
                 pbar.update(total)
-                pbar.set_postfix({"% bad": 100 * (total_bad / total)})
+                try:
+                    pbar.set_postfix({"% bad": 100 * (total_bad / total)})
+                except ZeroDivisionError:
+                    pbar.set_postfix({"% bad": "???"})
 
     # Combine all results into a single JSONL file
     output_file = f"{run_name}-optimade.jsonl"
