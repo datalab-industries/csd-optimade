@@ -206,7 +206,7 @@ ingest = [
 requires-dist = [
     { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
-    { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main" },
+    { name = "optimade", specifier = ">=1.1.5" },
     { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "pymongo", specifier = ">=4,<5" },
@@ -218,7 +218,7 @@ requires-dist = [
 
 [[package]]
 name = "csd-python-api"
-version = "3.3.0"
+version = "3.3.1"
 source = { registry = "https://pip.ccdc.cam.ac.uk/" }
 dependencies = [
     { name = "numpy" },
@@ -231,12 +231,12 @@ dependencies = [
     { name = "xgboost" },
 ]
 wheels = [
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.0-py311-none-linux_x86_64.whl", hash = "sha256:0f44daa4c8cbfa99cbfcd83a19c6fba29a2019954b5547c88034c33214f21661" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.0-py311-none-macosx_10_15_x86_64.whl", hash = "sha256:a11f2f6e33331241fc0fcfdb04b930e3d0bb0368a16bbb09f5d21155e1927d3c" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.0-py311-none-win_amd64.whl", hash = "sha256:d8ead73fae1c50d0e6f54acb37dfc443765836fa2566f906a324c8eba564bb20" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.0-py39-none-linux_x86_64.whl", hash = "sha256:f5f0675b8f60781f4c74ff58b4f634a73416c28be405bd7f81b464b1efa6cad6" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.0-py39-none-macosx_10_15_x86_64.whl", hash = "sha256:2423813d58219f502cccf8e87cfcfbd3fac6e24eb9ac5c67154afaf9ebe96bac" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.0-py39-none-win_amd64.whl", hash = "sha256:79e5d9dec169b1f0aa4455da35241d6b8f8efea866e31d6f97ade5d32a0db90f" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.1-py311-none-linux_x86_64.whl", hash = "sha256:35b45dd8053dcde43183e922f6b9aba81cc4714b1f3b16fc02ecc056b2b5d7c9" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.1-py311-none-macosx_10_15_x86_64.whl", hash = "sha256:48e16f2194b1f0a453692e199a5a6ae34dea9d8b6639463aeb51aa7d9558959e" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.1-py311-none-win_amd64.whl", hash = "sha256:8e4a0ce4e4866666ce723bec25bcc5558c1098d2cc54bb876d177d7f9d81e9fe" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.1-py39-none-linux_x86_64.whl", hash = "sha256:a855349f041598225c5158d01c8a99d2a182e992dbc19227d60c80b88cb41a31" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.1-py39-none-macosx_10_15_x86_64.whl", hash = "sha256:802c91850dac78ceb012ceaac34be8f903c3d8896b6f24deec57718de6065e4c" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.3.1-py39-none-win_amd64.whl", hash = "sha256:e03cc740c275d8ee5a2bed5a8360698de4ce8f60bff80a2534aabef290a2637b" },
 ]
 
 [[package]]
@@ -738,13 +738,17 @@ wheels = [
 
 [[package]]
 name = "optimade"
-version = "1.1.4"
-source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=main#03cd11c065eb73beed4ee240af7f65eca3648866" }
+version = "1.1.5"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "lark" },
     { name = "pydantic", extra = ["email"] },
     { name = "pydantic-settings" },
     { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/76/bf8970326167ae9d47b08d18da14667679bbead035a87abd18fbe422d779/optimade-1.1.5.tar.gz", hash = "sha256:1294ce385c9ca9d3d91cfe40b184d93d48e865eeed68a261d7f35352b2fd41c3", size = 184714 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b4/a0/82baaa83f2b903a70609909979c0d615034b4eaea97cee737e109cf57812/optimade-1.1.5-py3-none-any.whl", hash = "sha256:5327335b0cdbce68df3075262bc5ed71e58359db1c6e58aea32d2c4bae1a9d1e", size = 232369 },
 ]
 
 [package.optional-dependencies]
