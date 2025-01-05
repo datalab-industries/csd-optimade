@@ -1,4 +1,4 @@
-FROM ubuntu:24.04 AS base-packages
+FROM ubuntu:noble-20241118.1 AS base-packages
 
 # Various GUI libs needed for CSD installer and Python API
 RUN apt update && \
