@@ -50,6 +50,7 @@ Note that the extra index URL is required to install the `csd-python-api` packag
 > [!IMPORTANT]  
 >  Any attempts to use CSD data will additionally require a CSD license and [appropriate configuration](https://downloads.ccdc.cam.ac.uk/documentation/API/installation_notes.html#installation-options).
 
+
 ## Usage
 
 ### Ingesting CSD data
@@ -89,6 +90,37 @@ with a tool like `curl`:
 
 ```shell
 curl http://localhost:5000/structures?filter=elements HAS "C"
+```
+
+## Containerized version
+
+For ease of deployment, as containerised version of the ingestion pipeline is available.
+
+> [!IMPORTANT]
+> You should verify that your license agreement allows for any kind of deployment outside of your private network; it likely does not.
+
+To build the container from scratch, you need both a time-limited CSD installer
+download link (`CSD_INSTALLER_URL`), and your activation key
+(`CSD_ACTIVATION_KEY`).
+These should be stored in a `.env` file that is available both at build time and runtime.
+Note, managing these secrets requires a recent Docker version that includes
+Buildx.
+
+Once configured, you can build the container with
+
+```shell
+docker build --secret id=env,src=.env -t csd-optimade .
+```
+
+This will install the CSD inside the container, run the ingestion pipeline and
+prepare an encrypted version of the CSD in the OPTIMADE JSONLines format.
+The file can be decrypted with your `CSD_ACTIVATION_KEY`.
+
+To launch the container (which will decrypt the file and start the OPTIMADE
+API locally):
+
+```shell
+docker run --env-file .env -p 5000:5000 csd-optimade
 ```
 
 ## Contributing and Getting Help
