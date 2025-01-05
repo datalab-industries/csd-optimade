@@ -106,4 +106,12 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
 # Decrypt, decompress and serve the CSD data: requires the CSD_ACTIVATION_KEY at runtime
-# CMD ["uv", "run", "--no-sync", "csd-serve", "/opt/csd-optimade/csd-optimade.jsonl.gz.gpg"]
+CMD \
+  if [ -z "$CSD_ACTIVATION_KEY" ]; then \
+    echo "CSD_ACTIVATION_KEY not set" >&2; \
+    exit 1; \
+  fi; \
+  gpg --batch --yes --passphrase-fd 0 --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | \
+  gunzip > /opt/csd-optimade/csd-optimade.jsonl <<< "$CSD_ACTIVATION_KEY" || \
+  { echo "Decryption or decompression failed" >&2; exit 1; } && \
+  uv run --no-sync csd-serve /opt/csd-optimade/csd-optimade.jsonl
