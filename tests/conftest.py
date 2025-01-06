@@ -1,4 +1,8 @@
+import warnings
+
 import pytest
+
+from .utils import MockCSDEntry
 
 
 @pytest.fixture(scope="session")
@@ -18,28 +22,30 @@ def csd_available():
 def same_random_csd_entries(csd_available):
     """Pick some random entries from the CSD, with a fixed seed."""
 
+    num_entries: int = 1000
     if not csd_available:
-        pytest.skip("CSD not available")
+        warnings.warn("CSD not available")
+        yield zip(range(num_entries), num_entries * [MockCSDEntry()])
 
-    import random
+    else:
+        import random
 
-    from ccdc.io import EntryReader
+        from ccdc.io import EntryReader
 
-    random.seed(0)
-    entry_indices = set()
-    entries = []
-    num_entries: int = 100
-    max_n: int = int(1.29e6)
+        random.seed(0)
+        entry_indices = set()
+        entries = []
+        max_n: int = int(1.29e6)
 
-    with EntryReader("CSD") as reader:
-        while len(entry_indices) < num_entries:
-            i = random.randint(0, max_n)
-            if i not in entry_indices:
-                try:
-                    entry = reader[i]
-                    if entry:
-                        entries.append((i, entry))
-                        entry_indices.add(i)
-                except Exception:
-                    continue
-        yield entries
+        with EntryReader("CSD") as reader:
+            while len(entry_indices) < num_entries:
+                i = random.randint(0, max_n)
+                if i not in entry_indices:
+                    try:
+                        entry = reader[i]
+                        if entry:
+                            entries.append((i, entry))
+                            entry_indices.add(i)
+                    except Exception:
+                        continue
+            yield entries
