@@ -23,7 +23,7 @@ def check_entry(entry, resource, warn_only=False):
 
         assert (
             resource.attributes.nsites == total_num_atoms
-        ), f"{resource.attributes.nsites} != {total_num_atoms} for {entry.identifier}"
+        ), f"{resource.attributes.nsites=} != {total_num_atoms=} for {entry.identifier}"
 
         formula_dct = {}
         for e in (
@@ -68,7 +68,7 @@ def test_problematic_entries(bad_refcodes, csd_available):
         assert check_entry(entry, mapper(entry)), f"{entry.identifier} failed"
 
 
-def test_mappers(mapper, same_random_csd_entries):
+def test_mappers(same_random_csd_entries):
     from csd_optimade.mappers import from_csd_entry_directly
 
     mapper = from_csd_entry_directly

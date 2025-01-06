@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import datetime
 import math
+from typing import TYPE_CHECKING
 
-import ccdc.crystal
-import ccdc.entry
-import ccdc.io
+if TYPE_CHECKING:
+    import ccdc.crystal
+    import ccdc.entry
+    import ccdc.io
+
 from optimade.models import Species, StructureResource, StructureResourceAttributes
 
 
