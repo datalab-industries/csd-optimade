@@ -102,6 +102,10 @@ For ease of deployment, as containerised version of the ingestion pipeline is av
 To build the container from scratch, you need both a time-limited CSD installer
 download link (`CSD_INSTALLER_URL`), and your activation key
 (`CSD_ACTIVATION_KEY`).
+
+> [!NOTE]
+> As of January 2025, you can request your time-limited CSD installer link at https://www.ccdc.cam.ac.uk/support-and-resources/download-the-csd/. Once you receive the email, the `CSD_INSTALLER_URL` should be the one listed as "CSD Portfolio <version> Linux Online Installer (recommended, small download)".
+
 These should be stored in a `.env` file that is available both at build time and runtime.
 Note, managing these secrets requires a recent Docker version that includes
 Buildx.
