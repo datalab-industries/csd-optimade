@@ -43,7 +43,7 @@ FROM base-packages AS python-setup
 WORKDIR /opt/csd-optimade
 
 # Install GPG for encrypting the output CSD data
-RUN apt update && apt install -y gpg && rm -rf /var/lib/apt/lists/*
+RUN apt update && apt install -y gpg git && rm -rf /var/lib/apt/lists/*
 
 # Install uv for Python package management
 COPY --from=ghcr.io/astral-sh/uv:0.4 /uv /usr/local/bin/uv
@@ -106,12 +106,19 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --no-dev
 
 # Decrypt, decompress and serve the CSD data: requires the CSD_ACTIVATION_KEY at runtime
-CMD \
-  if [ -z "$CSD_ACTIVATION_KEY" ]; then \
-    echo "CSD_ACTIVATION_KEY not set" >&2; \
-    exit 1; \
-  fi; \
-  gpg --batch --yes --passphrase-fd 0 --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | \
-  gunzip > /opt/csd-optimade/csd-optimade.jsonl <<< "$CSD_ACTIVATION_KEY" || \
-  { echo "Decryption or decompression failed" >&2; exit 1; } && \
-  uv run --no-sync csd-serve /opt/csd-optimade/csd-optimade.jsonl
+COPY <<-"EOF" /entrypoint.sh
+#!/bin/bash
+set -e
+
+if [ -z "$CSD_ACTIVATION_KEY" ]; then
+ echo "CSD_ACTIVATION_KEY not set" >&2
+ exit 1
+fi
+
+gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl
+
+exec uv run --no-sync csd-serve /opt/csd-optimade/csd-optimade.jsonl
+EOF
+
+RUN chmod +x /entrypoint.sh
+CMD ["/entrypoint.sh"]
