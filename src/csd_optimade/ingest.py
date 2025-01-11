@@ -51,6 +51,9 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
         except RuntimeError:
             # The database iterator raises RuntimeError once we are out of bounds
             pass
+    if total_count == 0 and bad_count != 0:
+        raise RuntimeError("No good entries found in chunk; something went wrong.")
+
     return chunk_id, total_count, bad_count
 
 
