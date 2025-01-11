@@ -1,53 +1,70 @@
 import re
 import warnings
+from typing import TYPE_CHECKING
 
 import numpy as np
 import pytest
 from optimade.adapters.structures.utils import cellpar_to_cell
 
+from .utils import generate_same_random_csd_entries
 
-def check_entry(entry, resource, warn_only=False):
-    try:
-        assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
-        total_num_atoms = entry.crystal.z_value * len(
-            entry.crystal.asymmetric_unit_molecule.atoms
+if TYPE_CHECKING:
+    import ccdc.entry
+    from optimade.models import StructureResource
+
+TEST_ENTRIES = generate_same_random_csd_entries()
+
+
+def check_entry(
+    entry: "ccdc.entry.Entry", resource: "StructureResource", warn_only: bool = False
+) -> bool:
+    assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
+    total_num_atoms = entry.crystal.z_value * len(
+        entry.crystal.asymmetric_unit_molecule.atoms
+    )
+
+    a, b, c = entry.crystal.cell_lengths
+    alpha, beta, gamma = entry.crystal.cell_angles
+    cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
+    if resource.attributes.lattice_vectors:
+        np.testing.assert_array_almost_equal(
+            cell, resource.attributes.lattice_vectors, decimal=5
         )
 
-        a, b, c = entry.crystal.cell_lengths
-        alpha, beta, gamma = entry.crystal.cell_angles
-        cell = cellpar_to_cell([a, b, c, alpha, beta, gamma])
-        if resource.attributes.lattice_vectors:
-            np.testing.assert_array_almost_equal(
-                cell, resource.attributes.lattice_vectors, decimal=5
-            )
-
+    try:
         assert (
             resource.attributes.nsites == total_num_atoms
         ), f"{resource.attributes.nsites=} != {total_num_atoms=} for {entry.identifier}"
+    except AssertionError as exc:
+        if warn_only:
+            warnings.warn(
+                f"{exc} for {entry.identifier}",
+                RuntimeWarning,
+            )
 
-        formula_dct = {}
-        for e in (
-            entry.crystal.asymmetric_unit_molecule.formula.strip("(")
-            .strip(")n")
-            .split(" ")
-        ):
-            matches = re.match(r"([a-zA-Z]+)([0-9]*)", e)
-            if matches:
-                species, count = matches.groups()
-                formula_dct[species] = int(count) if count else 1
+    formula_dct = {}
+    for e in (
+        entry.crystal.asymmetric_unit_molecule.formula.strip("(").strip(")n").split(" ")
+    ):
+        matches = re.match(r"([a-zA-Z]+)([0-9]*)", e)
+        if matches:
+            species, count = matches.groups()
+            formula_dct[species] = int(count) if count else 1
 
-        formula_str: str = ""
-        for e in sorted(formula_dct):
-            formula_str += f"{e}{formula_dct[e] if formula_dct[e] > 1 else ''}"
+    formula_str: str = ""
+    for e in sorted(formula_dct):
+        formula_str += f"{e}{formula_dct[e] if formula_dct[e] > 1 else ''}"
 
+    try:
         assert formula_str == resource.attributes.chemical_formula_reduced
     except AssertionError as exc:
         if warn_only:
-            warnings.warn(f"{exc}", RuntimeWarning)
-            return 0
-        raise exc
+            warnings.warn(
+                f"{exc} for {entry.identifier}",
+                RuntimeWarning,
+            )
 
-    return 1
+    return True
 
 
 @pytest.mark.parametrize("bad_refcodes", [["ABEBUF", "ABAYIP"]])
@@ -68,35 +85,14 @@ def test_problematic_entries(bad_refcodes, csd_available):
         assert check_entry(entry, mapper(entry)), f"{entry.identifier} failed"
 
 
-def test_mappers(same_random_csd_entries):
+@pytest.mark.parametrize("index,entry", TEST_ENTRIES)
+def test_random_entries(index: int, entry: "ccdc.entry.Entry", csd_available):
+    if not csd_available:
+        pytest.skip("CSD not available")
     from csd_optimade.mappers import from_csd_entry_directly
 
     mapper = from_csd_entry_directly
-    failures = 0
-    good = 0
-    total = 0
-    for index, entry in same_random_csd_entries:
-        total += 1
-        try:
-            optimade = mapper(entry)
-        except Exception as exc:
-            print(f"⛔ {entry.identifier}")
-            failures += 1
-            warnings.warn(
-                f"Failed for entry {index}: {entry.identifier}. {exc}",
-                category=RuntimeWarning,
-            )
-            continue
-        result = check_entry(entry, optimade, warn_only=True)
-        good += result
-
-    num_warnings = total - failures - good
-
-    if num_warnings > 0 or failures > 0:
-        warnings.warn(
-            f"# warnings: {num_warnings}, # failures: {failures}, # success: {good}",
-            RuntimeWarning,
-        )
-
-    assert good > failures
-    assert good / (good + failures) > 0.95
+    optimade = mapper(entry)
+    assert check_entry(
+        entry, optimade, warn_only=True
+    ), f"{entry.identifier} ({index}) failed"
