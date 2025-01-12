@@ -69,7 +69,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Copy the CSD data into the ingestion image
 COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
-ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data
+ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
 # Copy relevant csd-optimade build files only
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
@@ -86,12 +86,47 @@ RUN --mount=type=secret,id=env \
     mkdir -p /root/.config/CCDC && \
     echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
     mkdir -p data && \
+    # For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
+    mkdir -p /opt/ccdc/ccdc-software && \
     uv run --no-sync csd-ingest && \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
     gzip -9 /opt/csd-optimade/csd-optimade.jsonl && \
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/csd-optimade.jsonl.gz
 
-FROM python-setup AS csd-server
+FROM csd-ingester AS csd-ingester-test
+LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
+LABEL org.opencontainers.image.description="Test environment for the csd-optimade project"
+
+WORKDIR /opt/csd-optimade
+ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk
+
+COPY tests /opt/csd-optimade/tests
+
+COPY <<-"EOF" /opt/csd-optimade/test-entrypoint.sh
+#!/bin/bash
+set -e
+
+if [ -z "$CSD_ACTIVATION_KEY" ]; then
+ echo "CSD_ACTIVATION_KEY not set" >&2
+ exit 1
+fi
+
+echo -e "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini
+# For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
+mkdir -p /opt/ccdc/ccdc-software
+
+exec uv run --no-sync pytest
+EOF
+
+RUN chmod +x /opt/csd-optimade/test-entrypoint.sh
+CMD ["/opt/csd-optimade/test-entrypoint.sh"]
+
+FROM python-setup AS csd-optimade-server
+LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
+LABEL org.opencontainers.image.description="Production environment for the csd-optimade project"
 
 WORKDIR /opt/csd-optimade
 
