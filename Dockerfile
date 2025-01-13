@@ -90,17 +90,23 @@ RUN --mount=type=secret,id=env \
     mkdir -p data && \
     # For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
     mkdir -p /opt/ccdc/ccdc-software && \
-    uv run --no-sync csd-ingest && \
+    uv run --no-sync csd-ingest --num-structures ${CSD_NUM_STRUCTURES} && \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
     gzip -9 /opt/csd-optimade/csd-optimade.jsonl && \
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/csd-optimade.jsonl.gz
+
+FROM base-packages AS compress-csd-data
+
+COPY --from=csd-data /opt/ccdc/ccdc-data/csd /tmp/csd
+RUN tar -czf /opt/csd.tar.gz -C /tmp csd && rm -rf /tmp/csd && gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz
 
 FROM python-setup AS csd-ingester-test
 LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
 LABEL org.opencontainers.image.description="Test environment for the csd-optimade project"
 
 # Copy the CSD data into the test image
-COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
+WORKDIR /opt/ccdc/ccdc-data
+COPY --from=compress-csd-data /opt/csd.tar.gz.gpg /opt/csd.tar.gz.gpg
 
 WORKDIR /opt/csd-optimade
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
@@ -111,7 +117,9 @@ COPY src /opt/csd-optimade/src
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
     # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
+    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12 && \
+    # Remove duplicated csd-python-api install
+    rm -rf /opt/csd-optimade/.venv/lib/python3.11/site-packages/lib/ccdc
 
 COPY tests /opt/csd-optimade/tests
 
@@ -124,10 +132,17 @@ if [ -z "$CSD_ACTIVATION_KEY" ]; then
  exit 1
 fi
 
+mkdir -p /root/.config/CCDC
 echo -e "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini
 # For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
 mkdir -p /opt/ccdc/ccdc-software
 
+echo "Decrypting CSD data..."
+time gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg
+echo "Decompressing CSD data..."
+time tar -xzf /opt/csd.tar.gz -C /opt/ccdc/ccdc-data
+
+echo "Running tests..."
 exec uv run --no-sync pytest
 EOF
 
