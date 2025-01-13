@@ -7,6 +7,11 @@ variable "VERSION" {
   default = "latest"
 }
 
+variable "CSD_NUM_STRUCTURES" {
+  // Number of structures to ingest (default: all)
+  default = ""
+}
+
 variable "CSD_ACTIVATION_KEY" {
   // Active CSD license key required both as build and runtime
   default = ""
