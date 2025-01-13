@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import datetime
 import math
+import random
+import string
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,7 +11,13 @@ if TYPE_CHECKING:
     import ccdc.entry
     import ccdc.io
 
-from optimade.models import Species, StructureResource, StructureResourceAttributes
+from optimade.models import (
+    ReferenceResource,
+    ReferenceResourceAttributes,
+    Species,
+    StructureResource,
+    StructureResourceAttributes,
+)
 
 
 def _reduce_csd_formula(formula: str) -> str:
@@ -33,7 +41,13 @@ def _reduce_csd_formula(formula: str) -> str:
     return formula_str
 
 
-def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
+def from_csd_entry_directly(
+    entry: ccdc.entry.Entry,
+) -> tuple[StructureResource, list[ReferenceResource]]:
+    """Convert a single `ccdc.entry.Entry` into an OPTIMADE structure,
+    returning any attached citations as OPTIMADE references.
+
+    """
     asym_unit = entry.crystal.asymmetric_unit_molecule
     elements = {d.atomic_symbol for d in asym_unit.atoms}
     try:
@@ -49,10 +63,53 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
     dep_date = (
         datetime.datetime.fromisoformat(dep_date.isoformat()) if dep_date else None
     )
+
+    def _get_citations(entry) -> list[ReferenceResource]:
+        citations = []
+        for citation in entry.publications:
+            # Use the DOI as OPTIMADE identifier, if available, otherwise generate one
+            # from first author, year and random string (cannot detect duplicates)
+            _id = citation.doi
+            if _id is None:
+                first_author = (
+                    citation.authors.split(", ")[0].split(".")[-1].split(" ")[-1]
+                )
+                _id = f'{first_author}{citation.year}-{"".join(random.choices(string.ascii_lowercase, k=6))}'
+
+            citations.append(
+                ReferenceResource(
+                    id=_id,
+                    attributes=ReferenceResourceAttributes(
+                        last_modified=now,
+                        authors=[
+                            {"name": author} for author in citation.authors.split(", ")
+                        ],
+                        year=str(
+                            citation.year
+                        ),  # Potential specification bug that this value should be a string
+                        journal=citation.journal.full_name,
+                        volume=str(citation.volume),
+                        pages=str(citation.first_page),
+                        doi=citation.doi,
+                    ),
+                )
+            )
+        return citations
+
+    references: list[ReferenceResource] = _get_citations(entry)
+    relationships: dict[str, dict] | None = None
+    if references:
+        relationships = {
+            "references": {
+                "data": [{"type": "references", "id": ref.id} for ref in references]
+            }
+        }
+
     resource = StructureResource(
         **{
             "id": entry.identifier,
             "type": "structures",
+            "relationships": relationships,
             "attributes": StructureResourceAttributes(
                 last_modified=now,
                 chemical_formula_descriptive=asym_unit.formula.replace(" ", ""),
@@ -90,4 +147,4 @@ def from_csd_entry_directly(entry: ccdc.entry.Entry) -> StructureResource:
             ),
         }
     )
-    return resource
+    return resource, references
