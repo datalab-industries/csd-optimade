@@ -75,7 +75,9 @@ ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk
+    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
+    # Remove unecessary mandatory deps from csd-python-api
+    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
 
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
@@ -93,15 +95,23 @@ RUN --mount=type=secret,id=env \
     gzip -9 /opt/csd-optimade/csd-optimade.jsonl && \
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/csd-optimade.jsonl.gz
 
-FROM csd-ingester AS csd-ingester-test
+FROM python-setup AS csd-ingester-test
 LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
 LABEL org.opencontainers.image.description="Test environment for the csd-optimade project"
+
+# Copy the CSD data into the test image
+COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
 
 WORKDIR /opt/csd-optimade
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
+# Copy relevant csd-optimade build files only
+COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
+COPY src /opt/csd-optimade/src
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk
+    uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
+    # Remove unecessary mandatory deps from csd-python-api
+    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
 
 COPY tests /opt/csd-optimade/tests
 
@@ -138,7 +148,9 @@ COPY --from=csd-ingester /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-op
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --locked --no-dev
+    uv sync --locked --no-dev && \
+    # Remove unecessary mandatory deps from csd-python-api
+    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
 
 # Decrypt, decompress and serve the CSD data: requires the CSD_ACTIVATION_KEY at runtime
 COPY <<-"EOF" /entrypoint.sh
