@@ -69,6 +69,31 @@ def cli():
                     "type": "integer",
                     "description": "The CCDC deposition ID.",
                 },
+                {
+                    "name": "_csd_space_group_symbol_hermann_mauginn",
+                    "type": "string",
+                    "description": "The space group symbol for the crystal, following the Hermann-Mauguin notation.",
+                },
+                {
+                    "name": "_csd_inchi",
+                    "type": "string",
+                },
+                {
+                    "name: ": "_csd_inchi_key",
+                    "type": "string",
+                },
+                {
+                    "name": "_csd_smiles",
+                    "type": "string",
+                },
+                {
+                    "name": "_csd_z_value",
+                    "type": "integer",
+                },
+                {
+                    "name": "_csd_z_prime",
+                    "type": "integer",
+                },
             ]
         },
         provider={

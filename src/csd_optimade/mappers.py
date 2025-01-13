@@ -105,11 +105,18 @@ def from_csd_entry_directly(
             }
         }
 
+    inchi = entry.crystal.generate_inchi()
+    if not inchi.success:
+        inchi = None
+
     resource = StructureResource(
         **{
             "id": entry.identifier,
             "type": "structures",
             "relationships": relationships,
+            "links": {
+                "self": f"https://www.ccdc.cam.ac.uk/structures/Search?Ccdcid={entry.identifier}"
+            },
             "attributes": StructureResourceAttributes(
                 last_modified=now,
                 chemical_formula_descriptive=asym_unit.formula.replace(" ", ""),
@@ -125,6 +132,12 @@ def from_csd_entry_directly(
                 ]
                 if positions
                 else None,
+                cartesian_site_positions=positions,
+                species_at_sites=[atom.atomic_symbol for atom in asym_unit.atoms]
+                if positions
+                else None,
+                structure_features=[],
+                # Add custom CSD-specific fields
                 _csd_lattice_parameters=[
                     [
                         entry.crystal.cell_lengths.a,
@@ -137,13 +150,14 @@ def from_csd_entry_directly(
                         entry.crystal.cell_angles.gamma,
                     ],
                 ],
+                _csd_space_group_symbol_hermann_mauginn=entry.crystal.spacegroup_symbol,  # Need to double-check if this matches OPTIMADE 1.2 definition
+                _csd_inchi=inchi.inchi if inchi else None,
+                _csd_inchi_key=inchi.key if inchi else None,
+                _csd_smiles=asym_unit.smiles,
+                _csd_z_value=entry.crystal.z_value,
+                _csd_z_prime=entry.crystal.z_prime,
                 _csd_ccdc_number=entry.ccdc_number,
                 _csd_deposition_date={"$date": dep_date},
-                cartesian_site_positions=positions,
-                species_at_sites=[atom.atomic_symbol for atom in asym_unit.atoms]
-                if positions
-                else None,
-                structure_features=[],
             ),
         }
     )
