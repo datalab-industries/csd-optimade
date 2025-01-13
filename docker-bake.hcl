@@ -41,3 +41,10 @@ target "csd-optimade-server" {
   tags = ["${IMAGE_BASE}:${VERSION}"]
   secret = ["id=env,src=.env"]
 }
+
+target "compress-csd-data" {
+  context = "."
+  dockerfile = "Dockerfile"
+  target = "csd-optimade-server"
+  secret = ["id=env,src=.env"]
+}

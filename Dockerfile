@@ -3,6 +3,8 @@ FROM ubuntu:noble-20241118.1 AS base-packages
 # Various GUI libs needed for CSD installer and Python API
 RUN apt update && \
     apt install -y \
+    git \
+    gpg \
     wget \
     libfontconfig1 \
     libdbus-1-3 \
@@ -42,9 +44,6 @@ FROM base-packages AS python-setup
 
 WORKDIR /opt/csd-optimade
 
-# Install GPG for encrypting the output CSD data
-RUN apt update && apt install -y gpg git && rm -rf /var/lib/apt/lists/*
-
 # Install uv for Python package management
 COPY --from=ghcr.io/astral-sh/uv:0.4 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
@@ -81,6 +80,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
+ARG CSD_NUM_STRUCTURES=
 
 # Mount secrets to manually activate the CSD only when needed during ingestion
 RUN --mount=type=secret,id=env \
@@ -98,7 +98,11 @@ RUN --mount=type=secret,id=env \
 FROM base-packages AS compress-csd-data
 
 COPY --from=csd-data /opt/ccdc/ccdc-data/csd /tmp/csd
-RUN tar -czf /opt/csd.tar.gz -C /tmp csd && rm -rf /tmp/csd && gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz
+RUN --mount=type=secret,id=env \
+    set -a && . /run/secrets/env && set +a && \
+    tar -czf /opt/csd.tar.gz -C /tmp csd && \
+    rm -rf /tmp/csd && \
+    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz
 
 FROM python-setup AS csd-ingester-test
 LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
@@ -138,9 +142,9 @@ echo -e "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC
 mkdir -p /opt/ccdc/ccdc-software
 
 echo "Decrypting CSD data..."
-time gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg
-echo "Decompressing CSD data..."
+time gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz
 time tar -xzf /opt/csd.tar.gz -C /opt/ccdc/ccdc-data
+echo "Decompressing CSD data..."
 
 echo "Running tests..."
 exec uv run --no-sync pytest
