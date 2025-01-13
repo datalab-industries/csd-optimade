@@ -32,9 +32,9 @@ def from_csd_database(
     for entry in chunked_structures:
         try:
             data, included = mapper(entry)
-            yield data.model_dump_json()
+            yield data.model_dump_json(exclude_unset=True, exclude_none=True)
             for resource in included or []:
-                yield resource.model_dump_json()
+                yield resource.model_dump_json(exclude_unset=True, exclude_none=True)
         except Exception:
             yield RuntimeError(f"Bad entry: {entry.identifier!r}")
 
