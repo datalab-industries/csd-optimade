@@ -127,6 +127,9 @@ API locally):
 docker run --env-file .env -p 5000:5000 csd-optimade
 ```
 
+For development, you may prefer to use the bake definitions in
+`docker-bake.hcl` to build and tag the relevant build stages.
+
 ## Contributing and Getting Help
 
 All development of this package (bug reports, suggestions, feedback and pull requests) occurs in the [csd-optimade GitHub repository](https://github.com/datalab-industries/csd-optimade).
