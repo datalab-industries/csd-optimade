@@ -7,8 +7,11 @@ on:
     - main
     - 'push-action/**'
 
+permissions:
+  contents: read
+  packages: read
+
 env:
-  PYTEST_ADDOPTS: "--color=yes"
   LINTING_PY_VERSION: "3.11"  # The version of Python to use for linting (typically the minimum supported)
 
 # Cancel running workflows when additional changes are pushed
@@ -53,19 +56,29 @@ jobs:
         submodules: true
         fetch-depth: 2
 
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: docker/setup-buildx-action@v3
+
+    - uses: docker/login-action@v3
       with:
-        python-version: '3.11'
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Set up uv
-      uses: astral-sh/setup-uv@v3
+    - name: "Pull pre-built image"
+      run: |
+        docker pull \
+          ghcr.io/datalab-industries/csd-ingester-test:latest
+
+    - uses: docker/bake-action@v4
       with:
-        version: "0.4.x"
-        enable-cache: true
+        push: false
+        files: docker-bake.hcl
+        target: test
 
-    - name: Install latest compatible versions of immediate dependencies
-      run: uv sync --all-extras --extra-index-url https://pip.ccdc.cam.ac.uk
-
-    - name: Run tests
-      run: uv run pytest -rs -vvv
+    - name: Run test container
+      env:
+        CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
+      run: |
+        docker run \
+          -e CSD_ACTIVATION_KEY \
+          ghcr.io/datalab-industries/csd-ingester-test:latest
