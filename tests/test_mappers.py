@@ -10,13 +10,16 @@ from .utils import generate_same_random_csd_entries
 
 if TYPE_CHECKING:
     import ccdc.entry
-    from optimade.models import StructureResource
+    from optimade.models import Resource, StructureResource
 
 TEST_ENTRIES = generate_same_random_csd_entries()
 
 
 def check_entry(
-    entry: "ccdc.entry.Entry", resource: "StructureResource", warn_only: bool = False
+    entry: "ccdc.entry.Entry",
+    resource: "StructureResource",
+    included: list["Resource"],
+    warn_only: bool = False,
 ) -> bool:
     assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
     total_num_atoms = entry.crystal.z_value * len(
@@ -64,6 +67,23 @@ def check_entry(
                 RuntimeWarning,
             )
 
+    try:
+        if entry.publications:
+            assert resource.relationships.references is not None
+            if entry.publications[0].doi:
+                assert (
+                    resource.relationships.references.data[0].id
+                    == entry.publications[0].doi
+                )
+            assert len(included) == len(entry.publications)
+
+    except AssertionError as exc:
+        if warn_only:
+            warnings.warn(
+                f"{exc} for {entry.identifier}",
+                RuntimeWarning,
+            )
+
     return True
 
 
@@ -82,7 +102,7 @@ def test_problematic_entries(bad_refcodes, csd_available):
         entry = reader.entry(refcode)
         if not entry:
             raise ValueError(f"Entry {refcode} not found in CSD")
-        assert check_entry(entry, mapper(entry)), f"{entry.identifier} failed"
+        assert check_entry(entry, *mapper(entry)), f"{entry.identifier} failed"
 
 
 @pytest.mark.parametrize("index,entry", TEST_ENTRIES)
@@ -92,7 +112,7 @@ def test_random_entries(index: int, entry: "ccdc.entry.Entry", csd_available):
     from csd_optimade.mappers import from_csd_entry_directly
 
     mapper = from_csd_entry_directly
-    optimade = mapper(entry)
+    optimade, included = mapper(entry)
     assert check_entry(
-        entry, optimade, warn_only=True
+        entry, optimade, included, warn_only=True
     ), f"{entry.identifier} ({index}) failed"

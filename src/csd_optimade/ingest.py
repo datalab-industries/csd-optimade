@@ -13,7 +13,7 @@ import ccdc.crystal
 import ccdc.entry
 import ccdc.io
 import tqdm
-from optimade.models import StructureResource
+from optimade.models import ReferenceResource, StructureResource
 from optimade_maker.convert import _construct_entry_type_info
 
 from csd_optimade.mappers import from_csd_entry_directly
@@ -22,13 +22,19 @@ from csd_optimade.mappers import from_csd_entry_directly
 def from_csd_database(
     reader: ccdc.io.EntryReader,
     range_: Generator = itertools.count(),  # type: ignore
-    mapper: Callable[[ccdc.entry.Entry], StructureResource] = from_csd_entry_directly,
+    mapper: Callable[
+        [ccdc.entry.Entry], tuple[StructureResource, list[ReferenceResource]]
+    ] = from_csd_entry_directly,
 ) -> Generator[str | RuntimeError]:
-    """Loop through a chunk of the entry reader and map the entries to OPTIMADE structures."""
+    """Loop through a chunk of the entry reader and map the entries to OPTIMADE
+    structures, plus a list of any linked resources."""
     chunked_structures = [entry for entry in [reader[r] for r in range_]]
     for entry in chunked_structures:
         try:
-            yield mapper(entry).model_dump_json()
+            data, included = mapper(entry)
+            yield data.model_dump_json()
+            for resource in included or []:
+                yield resource.model_dump_json()
         except Exception:
             yield RuntimeError(f"Bad entry: {entry.identifier!r}")
 
