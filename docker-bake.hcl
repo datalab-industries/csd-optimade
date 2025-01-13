@@ -26,6 +26,7 @@ target "csd-ingester-test" {
   dockerfile = "Dockerfile"
   target = "csd-ingester-test"
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
+  secret = ["id=env,src=.env"]
 }
 
 target "csd-optimade-server" {
@@ -33,4 +34,5 @@ target "csd-optimade-server" {
   dockerfile = "Dockerfile"
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
+  secret = ["id=env,src=.env"]
 }
