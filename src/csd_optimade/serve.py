@@ -52,6 +52,7 @@ def cli():
         mongo_uri=mongo_uri,
         database_backend="mongodb" if mongo_uri else "mongomock",
         create_default_index=True,
+        insert_from_jsonl=None,
         provider_fields={
             "structures": [
                 {
@@ -77,22 +78,27 @@ def cli():
                 {
                     "name": "_csd_inchi",
                     "type": "string",
+                    "description": "CSD InChI string.",
                 },
                 {
                     "name": "_csd_inchi_key",
                     "type": "string",
+                    "description": "CSD InChIKey.",
                 },
                 {
                     "name": "_csd_smiles",
                     "type": "string",
+                    "description": "CSD SMILES string.",
                 },
                 {
                     "name": "_csd_z_value",
                     "type": "integer",
+                    "description": "The number of formula units in the unit cell.",
                 },
                 {
                     "name": "_csd_z_prime",
                     "type": "integer",
+                    "description": "The number of formula units in the asymmetric unit.",
                 },
             ]
         },
