@@ -166,7 +166,7 @@ ingest = [
 requires-dist = [
     { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
-    { name = "optimade", specifier = ">=1.1.5" },
+    { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=ml-evs%2Fjsonl-relationships-links" },
     { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "pymongo", specifier = ">=4,<5" },
@@ -607,16 +607,12 @@ wheels = [
 [[package]]
 name = "optimade"
 version = "1.1.9"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=ml-evs%2Fjsonl-relationships-links#cfc3e7af4077747707f239770762787289b502ff" }
 dependencies = [
     { name = "lark" },
     { name = "pydantic", extra = ["email"] },
     { name = "pydantic-settings" },
     { name = "requests" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/23/42/0a196a0df3ca2b75bb83b1f402a795c5ce3c68b880b255596913686f1bdd/optimade-1.1.9.tar.gz", hash = "sha256:271bc4e423972629eab21461c61623a799b4c9c9f4e7a2a8fee78b0bf1253dee", size = 185628 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c0/f1/8fada3f8a89df27628f5b05ba3b9c3d9ae29246fa8ae3ffbc39505238a3d/optimade-1.1.9-py3-none-any.whl", hash = "sha256:593d0d62cc10270db3e8bec9fcc98c30c88564afd88913b75ad6d170ad53d394", size = 233584 },
 ]
 
 [package.optional-dependencies]
