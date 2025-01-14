@@ -67,7 +67,7 @@ jobs:
     - name: "Pull pre-built image"
       run: |
         docker pull \
-          ghcr.io/datalab-industries/csd-ingester-test:latest
+          ghcr.io/datalab-industries/csd-optimade-test:latest
 
     - uses: docker/bake-action@v4
       with:
