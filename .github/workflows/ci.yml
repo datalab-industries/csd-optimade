@@ -75,6 +75,7 @@ jobs:
       run: |
         docker build \
           --secret=id=env,env=CSD_ACTIVATION_KEY \
+          --cache-from ghcr.io/datalab-industries/csd-optimade-test:latest \
           -t ghcr.io/datalab-industries/csd-optimade-test:latest \
           --target csd-ingester-test .
 
