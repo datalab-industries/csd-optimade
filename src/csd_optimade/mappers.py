@@ -79,6 +79,7 @@ def from_csd_entry_directly(
             citations.append(
                 ReferenceResource(
                     id=_id,
+                    type="references",
                     attributes=ReferenceResourceAttributes(
                         last_modified=now,
                         authors=[
