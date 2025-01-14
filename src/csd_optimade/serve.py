@@ -79,7 +79,7 @@ def cli():
                     "type": "string",
                 },
                 {
-                    "name: ": "_csd_inchi_key",
+                    "name": "_csd_inchi_key",
                     "type": "string",
                 },
                 {
