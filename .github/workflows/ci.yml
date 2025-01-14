@@ -69,11 +69,14 @@ jobs:
         docker pull \
           ghcr.io/datalab-industries/csd-optimade-test:latest
 
-    - uses: docker/bake-action@v4
-      with:
-        push: false
-        files: docker-bake.hcl
-        target: test
+    - name: Update container with repository changes
+      env:
+        CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
+      run: |
+        docker build \
+          --secret=id=env,env=CSD_ACTIVATION_KEY \
+          -t ghcr.io/datalab-industries/csd-optimade-test:latest \
+          --target csd-ingester-test .
 
     - name: Run test container
       env:
