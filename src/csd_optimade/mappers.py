@@ -120,7 +120,7 @@ def from_csd_entry_directly(
             },
             "attributes": StructureResourceAttributes(
                 last_modified=now,
-                chemical_formula_descriptive=asym_unit.formula.replace(" ", ""),
+                chemical_formula_descriptive=entry.formula,
                 chemical_formula_reduced=_reduce_csd_formula(asym_unit.formula),
                 elements=sorted(list(elements)),
                 dimension_types=(1, 1, 1),
