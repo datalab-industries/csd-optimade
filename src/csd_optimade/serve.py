@@ -1,4 +1,5 @@
 import tempfile
+import typing
 from pathlib import Path
 
 from optimade_maker.serve import OptimakeServer
@@ -11,6 +12,11 @@ def cli():
     parser.add_argument("jsonl_path", type=str, default="optimade.jsonl")
     parser.add_argument(
         "--port", type=int, default=5000, help="Port to run the OPTIMADE API on."
+    )
+    parser.add_argument(
+        "--no-insert",
+        action="store_true",
+        help="Do not insert the JSONL file into the database.",
     )
     parser.add_argument(
         "--mongo-uri",
@@ -27,6 +33,11 @@ def cli():
         jsonl_path = tmp_path
     else:
         jsonl_path = jsonl_path.parent
+
+    # kwargs to override optimade-maker defaults, if set
+    override_kwargs: dict[str, typing.Any] = {}
+    if args.no_insert:
+        override_kwargs["insert_from_jsonl"] = None
 
     # Allow user to specify a real MongoDB
     mongo_uri = args.mongo_uri
@@ -51,8 +62,6 @@ def cli():
         args.port,
         mongo_uri=mongo_uri,
         database_backend="mongodb" if mongo_uri else "mongomock",
-        create_default_index=True,
-        insert_from_jsonl=None,
         provider_fields={
             "structures": [
                 {
@@ -107,5 +116,6 @@ def cli():
             "name": "Cambridge Structural Database",
             "description": "A database of crystal structures curated by the Cambridge Crystallographic Data Centre.",
         },
+        **override_kwargs,
     )
     optimake_server.start_api()
