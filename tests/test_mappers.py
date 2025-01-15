@@ -87,7 +87,7 @@ def check_entry(
     return True
 
 
-@pytest.mark.parametrize("bad_refcodes", [["ABEBUF", "ABAYIP"]])
+@pytest.mark.parametrize("bad_refcodes", [["ABEBUF", "ABAYIP", "ADALEZ"]])
 def test_problematic_entries(bad_refcodes, csd_available):
     if not csd_available:
         pytest.skip("CSD not available")
