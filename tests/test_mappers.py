@@ -35,9 +35,9 @@ def check_entry(
         )
 
     try:
-        assert (
-            resource.attributes.nsites == total_num_atoms
-        ), f"{resource.attributes.nsites=} != {total_num_atoms=} for {entry.identifier}"
+        assert resource.attributes.nsites == total_num_atoms, (
+            f"{resource.attributes.nsites=} != {total_num_atoms=} for {entry.identifier}"
+        )
     except AssertionError as exc:
         if warn_only:
             warnings.warn(
@@ -113,6 +113,6 @@ def test_random_entries(index: int, entry: "ccdc.entry.Entry", csd_available):
 
     mapper = from_csd_entry_directly
     optimade, included = mapper(entry)
-    assert check_entry(
-        entry, optimade, included, warn_only=True
-    ), f"{entry.identifier} ({index}) failed"
+    assert check_entry(entry, optimade, included, warn_only=True), (
+        f"{entry.identifier} ({index}) failed"
+    )

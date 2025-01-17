@@ -74,7 +74,7 @@ def from_csd_entry_directly(
                 first_author = (
                     citation.authors.split(", ")[0].split(".")[-1].split(" ")[-1]
                 )
-                _id = f'{first_author}{citation.year}-{"".join(random.choices(string.ascii_lowercase, k=6))}'
+                _id = f"{first_author}{citation.year}-{''.join(random.choices(string.ascii_lowercase, k=6))}"
 
             citations.append(
                 ReferenceResource(

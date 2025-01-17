@@ -4,7 +4,6 @@ import pytest
 @pytest.fixture(scope="session")
 def csd_available():
     """Check if the CSD is available."""
-
     try:
         from ccdc import io
 

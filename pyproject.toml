@@ -61,7 +61,7 @@ namespaces = false
 target-version = "py39"
 
 [tool.ruff.lint]
-select = ["E", "F", "I", "W", "Q"]
+select = ["E", "F", "I", "W", "Q", "TC"]
 ignore = ["E501", "E402"]
 fixable = ["A", "B", "C", "D", "E", "F", "I"]
 unfixable = []
