@@ -1,4 +1,5 @@
 variable "IMAGE_BASE" {
+  // Base image name to use for the images, will be `-test` or not depending on the target
   default = "ghcr.io/datalab-industries/csd-optimade"
 }
 
@@ -31,7 +32,7 @@ target "csd-ingester-test" {
   dockerfile = "Dockerfile"
   target = "csd-ingester-test"
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
-  secret = ["id=env,src=.env"]
+  secret = CI ? ["type=env,id=env"] : ["type=file,id=env,src=.env"]
 }
 
 target "csd-optimade-server" {
@@ -39,12 +40,12 @@ target "csd-optimade-server" {
   dockerfile = "Dockerfile"
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
-  secret = ["id=env,src=.env"]
+  secret = CI ? ["type=env,id=env"] : ["type=file,id=env,src=.env"]
 }
 
 target "compress-csd-data" {
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-optimade-server"
-  secret = ["id=env,src=.env"]
+  secret = CI ? ["type=env,id=env"] : ["type=file,id=env,src=.env"]
 }

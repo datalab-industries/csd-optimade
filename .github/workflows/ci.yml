@@ -74,7 +74,7 @@ jobs:
         CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
       run: |
         docker build \
-          --secret=id=env,env=CSD_ACTIVATION_KEY \
+          --secret=id=env,env=env \
           --cache-from ghcr.io/datalab-industries/csd-optimade-test:latest \
           --build-arg BUILDKIT_INLINE_CACHE=1 \
           -t ghcr.io/datalab-industries/csd-optimade-test:latest \
