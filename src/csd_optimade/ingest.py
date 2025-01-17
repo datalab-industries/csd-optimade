@@ -4,16 +4,20 @@ import glob
 import itertools
 import json
 import os
-from collections.abc import Generator
 from functools import partial
 from pathlib import Path
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
 import ccdc.crystal
 import ccdc.entry
 import ccdc.io
 import tqdm
-from optimade.models import ReferenceResource, StructureResource
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
+
+    from optimade.models import ReferenceResource, StructureResource
+
 from optimade_maker.convert import _construct_entry_type_info
 
 from csd_optimade.mappers import from_csd_entry_directly
@@ -27,7 +31,8 @@ def from_csd_database(
     ] = from_csd_entry_directly,
 ) -> Generator[str | RuntimeError]:
     """Loop through a chunk of the entry reader and map the entries to OPTIMADE
-    structures, plus a list of any linked resources."""
+    structures, plus a list of any linked resources.
+    """
     chunked_structures = [entry for entry in [reader[r] for r in range_]]
     for entry in chunked_structures:
         try:
@@ -139,5 +144,5 @@ def cli():
             file.unlink()
 
         print(
-            f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024 ** 2:.1f} MB)"
+            f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024**2:.1f} MB)"
         )

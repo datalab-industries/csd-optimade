@@ -60,7 +60,6 @@ class MockCSDEntry:
 
 def generate_same_random_csd_entries(csd_available=True):
     """Pick some random entries from the CSD, with a fixed seed."""
-
     num_entries: int = 1000
     if not csd_available:
         warnings.warn("CSD not available")
