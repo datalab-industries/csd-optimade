@@ -34,11 +34,16 @@ RUN apt update && \
 
 FROM base-packages AS csd-data
 
-# Mount and then source any .env secrets that are required to download and activate the CSD
-RUN --mount=type=secret,id=env \
-    set -a && . /run/secrets/env && set +a && \
-    wget -O /opt/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/csd-installer.sh && \
-    /opt/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
+RUN \
+    # Mount and then source any .env secrets that are required to download and activate the CSD
+    --mount=type=secret,id=csd-installer-url,env=CSD_INSTALLER_URL \
+    # Cache the downloaded installer so we can avoid re-requesting links all the time
+    --mount=type=cache,target=/opt/cache \
+    # Download/use the installer and download CSD
+    if [ ! -d /opt/cache/csd-installer.sh ]; then \
+        wget -O /opt/cache/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/cache/csd-installer.sh; \
+    fi && \
+    /opt/cache/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
 
 FROM base-packages AS python-setup
 
@@ -83,8 +88,7 @@ ARG REINGEST=false
 ARG CSD_NUM_STRUCTURES=
 
 # Mount secrets to manually activate the CSD only when needed during ingestion
-RUN --mount=type=secret,id=env \
-    set -a && . /run/secrets/env && set +a && \
+RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     mkdir -p /root/.config/CCDC && \
     echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
     mkdir -p data && \
@@ -98,8 +102,7 @@ RUN --mount=type=secret,id=env \
 FROM base-packages AS compress-csd-data
 
 COPY --from=csd-data /opt/ccdc/ccdc-data/csd /tmp/csd
-RUN --mount=type=secret,id=env \
-    set -a && . /run/secrets/env && set +a && \
+RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     tar -czf /opt/csd.tar.gz -C /tmp csd && \
     rm -rf /tmp/csd && \
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz

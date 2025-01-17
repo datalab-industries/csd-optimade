@@ -1,3 +1,8 @@
+variable "CI" {
+  // Set to true if running in a CI environment; this affects how secrets are mounted
+  default = false
+}
+
 variable "IMAGE_BASE" {
   // Base image name to use for the images, will be `-test` or not depending on the target
   default = "ghcr.io/datalab-industries/csd-optimade"
@@ -31,8 +36,15 @@ target "csd-ingester-test" {
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-ingester-test"
+  cache-from = [
+    "type=registry,ref=${IMAGE_BASE}-test:${VERSION}",
+    "type=registry,ref=${IMAGE_BASE}-test:cache"
+  ]
+  cache-to = [
+    "type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"
+  ]
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
-  secret = CI ? ["type=env,id=env"] : ["type=file,id=env,src=.env"]
+  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY"]
 }
 
 target "csd-optimade-server" {
@@ -40,12 +52,20 @@ target "csd-optimade-server" {
   dockerfile = "Dockerfile"
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
-  secret = CI ? ["type=env,id=env"] : ["type=file,id=env,src=.env"]
+  cache-from = ["type=registry,ref=${IMAGE_BASE}"]
+  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY"]
+}
+
+target "csd-data" {
+  context = "."
+  dockerfile = "Dockerfile"
+  target = "csd-data"
+  secret = ["id=csd-installer-url,env=CSD_INSTALLER_URL"]
 }
 
 target "compress-csd-data" {
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-optimade-server"
-  secret = CI ? ["type=env,id=env"] : ["type=file,id=env,src=.env"]
+  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY"]
 }
