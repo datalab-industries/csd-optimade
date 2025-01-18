@@ -60,11 +60,6 @@ jobs:
       with:
         buildkitd-flags: --debug
 
-    # Allow buildx to pull from GH cache
-    - name: Configure Git credentials
-      run: |
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-
     - uses: docker/login-action@v3
       with:
         registry: ghcr.io
@@ -74,8 +69,8 @@ jobs:
     - name: Build latest changes
       uses: docker/bake-action@v6
       env:
-        CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
-        CSD_INSTALLER_URL: ${{ secrets.CSD_INSTALLER_URL }}
+        CSD_ACTIVATION_KEY: '${{ secrets.CSD_ACTIVATION_KEY }}'
+        CSD_INSTALLER_URL: '${{ secrets.CSD_INSTALLER_URL }}'
       with:
         source: "."
         targets: "csd-ingester-test"
