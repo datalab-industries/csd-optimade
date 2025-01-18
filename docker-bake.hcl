@@ -15,7 +15,7 @@ variable "VERSION" {
 
 variable "CSD_NUM_STRUCTURES" {
   // Number of structures to ingest (default: all)
-  default = ""
+  default = 100000
 }
 
 variable "CSD_ACTIVATION_KEY" {
@@ -56,6 +56,7 @@ target "csd-optimade-server" {
   inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
+  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES}
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
   cache-from = ["type=registry,ref=${IMAGE_BASE}"]
