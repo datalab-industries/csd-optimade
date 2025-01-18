@@ -71,16 +71,13 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Pull pre-built image
-      run: |
-        docker pull ghcr.io/datalab-industries/csd-optimade-test:latest
-
     - name: Build latest changes
       uses: docker/bake-action@v6
       env:
         CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
         CSD_INSTALLER_URL: ${{ secrets.CSD_INSTALLER_URL }}
       with:
+        source: "."
         targets: "csd-ingester-test"
         push: true
 
