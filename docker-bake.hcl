@@ -28,11 +28,16 @@ variable "CSD_INSTALLER_URL" {
   default = ""
 }
 
+// Used in the CI to appropriately tag the images
+// based on events
+target "docker-metadata-action" {}
+
 group "default" {
   targets = ["csd-ingester-test", "csd-optimade-server"]
 }
 
 target "csd-ingester-test" {
+  inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-ingester-test"
@@ -48,6 +53,7 @@ target "csd-ingester-test" {
 }
 
 target "csd-optimade-server" {
+  inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-optimade-server"
