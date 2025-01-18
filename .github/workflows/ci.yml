@@ -70,11 +70,10 @@ jobs:
       uses: docker/bake-action@v6
       env:
         CSD_ACTIVATION_KEY: '${{ secrets.CSD_ACTIVATION_KEY }}'
-        CSD_INSTALLER_URL: '${{ secrets.CSD_INSTALLER_URL }}'
       with:
         source: "."
         targets: "csd-ingester-test"
-        push: true
+        push: false
 
     - name: Run test container
       env:
