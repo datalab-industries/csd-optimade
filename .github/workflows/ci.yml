@@ -85,6 +85,8 @@ jobs:
         targets: "csd-ingester-test"
         push: false
         load: true
+        set: |
+          *.output=type=docker,compression=zstd
 
     - name: Clear buildx cache
       run: |
