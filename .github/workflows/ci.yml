@@ -86,11 +86,18 @@ jobs:
         push: false
         load: true
 
+    - name: Clear buildx cache
+      run: |
+        df -h
+        docker system df
+        docker buildx prune --force
+        docker system df
+        df -h
+
     - name: Run test container
       env:
         CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
       run: |
-        docker images
         docker run \
           -e CSD_ACTIVATION_KEY \
           ghcr.io/datalab-industries/csd-optimade-test:latest
