@@ -66,6 +66,16 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Maximise disk space
+      run: |
+        df -h
+        sudo swapoff -a
+        sudo apt clean
+        sudo apt autoremove -y
+        sudo apt autoclean -y
+        sudo rm -rf /swapfile /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        df -h
+
     - name: Build latest changes
       uses: docker/bake-action@v6
       env:
@@ -80,6 +90,7 @@ jobs:
       env:
         CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
       run: |
+        docker images
         docker run \
           -e CSD_ACTIVATION_KEY \
-          ghcr.io/datalab-industries/csd-ingester-test:latest
+          ghcr.io/datalab-industries/csd-optimade-test:latest
