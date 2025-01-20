@@ -43,7 +43,8 @@ target "csd-ingester-test" {
   target = "csd-ingester-test"
   cache-from = [
     "type=registry,ref=${IMAGE_BASE}-test:${VERSION}",
-    "type=registry,ref=${IMAGE_BASE}-test:cache"
+    "type=registry,ref=${IMAGE_BASE}-test:cache",
+    "type=gha",
   ]
   cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
