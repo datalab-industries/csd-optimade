@@ -46,7 +46,7 @@ target "csd-ingester-test" {
     "type=registry,ref=${IMAGE_BASE}-test:cache",
     "type=gha",
   ]
-  cache-to = CI ? ["type=gha,mode=min"] : ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
+  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
   secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
 }
