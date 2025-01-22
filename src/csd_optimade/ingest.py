@@ -4,6 +4,7 @@ import glob
 import itertools
 import json
 import os
+import tempfile
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
@@ -91,6 +92,7 @@ def cli():
     if chunk_size > int(args.num_structures):
         chunk_size = int(args.num_structures)
         num_chunks = 1
+        pool_size = 1
     else:
         num_chunks = int(args.num_structures) // chunk_size
 
@@ -118,8 +120,10 @@ def cli():
                 except ZeroDivisionError:
                     pbar.set_postfix({"% bad": "???"})
 
-    # Combine all results into a single JSONL file
+    # Combine all results into a single JSONL file, first temporary
     output_file = f"{run_name}-optimade.jsonl"
+    tmp_dir = tempfile.TemporaryDirectory()
+    tmp_jsonl_path = Path(tmp_dir.name) / output_file
     print(f"Collecting results into {output_file}")
 
     pattern = f"{run_name}-optimade-*.jsonl"
@@ -128,12 +132,12 @@ def cli():
         key=lambda x: int(x.split("-")[-1].split(".")[0]),
     )
 
-    with open(output_file, "w") as jsonl:
+    with open(tmp_jsonl_path, "w") as tmp_jsonl:
         # Write headers
-        jsonl.write(
+        tmp_jsonl.write(
             json.dumps({"x-optimade": {"meta": {"api_version": "1.1.0"}}}) + "\n"
         )
-        jsonl.write(
+        tmp_jsonl.write(
             _construct_entry_type_info(
                 "structures", properties=[], provider_prefix=""
             ).model_dump_json()
@@ -143,10 +147,28 @@ def cli():
         for filename in input_files:
             file = Path(filename)
             with open(file) as infile:
-                jsonl.write(infile.read())
-            jsonl.write("\n")
+                tmp_jsonl.write(infile.read())
+            tmp_jsonl.write("\n")
             file.unlink()
 
-        print(
-            f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024**2:.1f} MB)"
-        )
+    with open(tmp_jsonl_path) as tmp_jsonl:
+        ids_by_type: dict[str, set] = {}
+        with open(output_file, "a") as final_jsonl:
+            for line_entry in tmp_jsonl:
+                if not line_entry.strip():
+                    continue
+                json_entry = json.loads(line_entry)
+                if _type := json_entry.get("type"):
+                    if _type not in ids_by_type:
+                        ids_by_type[_type] = set()
+                    if _id := json_entry.get("id") in ids_by_type[_type]:
+                        continue
+                    ids_by_type[_type].add(json_entry["id"])
+                    final_jsonl.write(line_entry)
+
+    tmp_dir.cleanup()
+
+    # Final scan to remove duplicates an empty lines
+    print(
+        f"Combined {len(input_files)} files into {output_file} (total size of file: {os.path.getsize(output_file) / 1024**2:.1f} MB)"
+    )
