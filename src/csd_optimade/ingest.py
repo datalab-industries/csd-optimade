@@ -76,7 +76,11 @@ def cli():
     parser.add_argument("--num-processes", type=int, default=4)
     parser.add_argument("--chunk-size", type=int, default=10_000)
     parser.add_argument(
-        "--num-structures", type=int, nargs="?", const=int(1.29e7), default=int(1.29e7)
+        "--num-structures",
+        type=int,
+        nargs="?",
+        const=int(1_290_000),
+        default=int(1_290_000),
     )
     parser.add_argument("--run-name", type=str, default="csd")
 
