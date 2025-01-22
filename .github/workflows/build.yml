@@ -45,6 +45,7 @@ jobs:
         CSD_NUM_STRUCTURES: 1290000
       uses: docker/bake-action@v6
       with:
-        targets: csd-optimade-server
         source: "."
+        targets: "csd-optimade-server"
+        pull: true
         push: true
