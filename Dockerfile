@@ -186,7 +186,7 @@ fi
 
 gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl
 
-exec uv run --no-sync csd-serve /opt/csd-optimade/csd-optimade.jsonl
+exec uv run --no-sync csd-serve --drop-first /opt/csd-optimade/csd-optimade.jsonl
 EOF
 
 RUN chmod +x /entrypoint.sh
