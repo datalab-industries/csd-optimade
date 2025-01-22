@@ -36,14 +36,15 @@ jobs:
       with:
         images: |
           name=ghcr.io/datalab-industries/csd-optimade
-          name=ghcr.io/datalab-industries/csd-optimade-test
 
     # With some luck, this does not need any CSD installer URL mounted
     # as only the final layers change
     - name: Build and push latest changes
       env:
         CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
+        CSD_NUM_STRUCTURES: 1290000
       uses: docker/bake-action@v6
       with:
+        targets: csd-optimade-server
         source: "."
         push: true
