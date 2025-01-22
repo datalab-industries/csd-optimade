@@ -19,6 +19,11 @@ def cli():
         help="Do not insert the JSONL file into the database.",
     )
     parser.add_argument(
+        "--drop-first",
+        action="store_true",
+        help="Drop the database before inserting the JSONL file.",
+    )
+    parser.add_argument(
         "--mongo-uri",
         type=str,
         help="An optional MongoDB URI to use, instead of the in-memory database.",
@@ -47,6 +52,12 @@ def cli():
         import pymongo
 
         logging.getLogger("pymongo").setLevel(logging.WARNING)
+        parsed_uri = pymongo.uri_parser.parse_uri(mongo_uri)
+        database_name = parsed_uri.get("database")
+        if not database_name:
+            raise ValueError(
+                f"Could not parse database name from MongoDB URI: {mongo_uri}"
+            )
         test_client = None
         try:
             test_client = pymongo.MongoClient(mongo_uri, serverSelectionTimeoutMS=1000)
@@ -56,6 +67,9 @@ def cli():
             raise ValueError(
                 f"Could not connect to MongoDB using the provided URI: {mongo_uri}"
             )
+
+        if args.drop_first and test_client:
+            test_client.drop_database(database_name)
 
     optimake_server = OptimakeServer(
         jsonl_path,
