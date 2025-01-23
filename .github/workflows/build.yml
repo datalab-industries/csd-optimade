@@ -47,7 +47,7 @@ jobs:
     - name: Build and push latest changes
       env:
         CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
-        CSD_NUM_STRUCTURES: 1290000
+        CSD_INSTALLER_URL: ${{ secrets.CSD_INSTALLER_URL }}
       uses: docker/bake-action@v6
       with:
         source: "."
