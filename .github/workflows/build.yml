@@ -30,17 +30,22 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Maximise disk space
+      run: |
+        df -h
+        sudo swapoff -a
+        sudo apt clean
+        sudo apt autoremove -y
+        sudo apt autoclean -y
+        sudo rm -rf /swapfile /usr/share/dotnet /usr/local/lib/android /opt/ghc
+        df -h
+
     # Grab tags from the GitHub event to tag the image
     - uses: docker/metadata-action@v5
       id: metadata
       with:
         images: |
           name=ghcr.io/datalab-industries/csd-optimade
-
-    - run: |
-        docker images
-        docker pull ghcr.io/datalab-industries/csd-optimade
-        docker images
 
     # With some luck, this does not need any CSD installer URL mounted
     # as only the final layers change
