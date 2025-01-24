@@ -41,11 +41,11 @@ jobs:
         df -h
 
     # Grab tags from the GitHub event to tag the image
-    - uses: docker/metadata-action@v5
-      id: metadata
-      with:
-        images: |
-          name=ghcr.io/datalab-industries/csd-optimade
+    #- uses: docker/metadata-action@v5
+    #  id: metadata
+    #  with:
+    #    images: |
+    #      name=ghcr.io/datalab-industries/csd-optimade
 
     # With some luck, this does not need any CSD installer URL mounted
     # as only the final layers change
@@ -57,7 +57,6 @@ jobs:
       with:
         source: "."
         targets: "csd-optimade-server"
-        pull: true
         push: true
         load: true
         set: |
