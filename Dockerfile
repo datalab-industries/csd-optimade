@@ -37,12 +37,8 @@ FROM base-packages AS csd-data
 RUN \
     # Mount and then source any .env secrets that are required to download and activate the CSD
     --mount=type=secret,id=csd-installer-url,env=CSD_INSTALLER_URL \
-    # Cache the downloaded installer so we can avoid re-requesting links all the time
-    --mount=type=cache,target=/opt/cache \
     # Download/use the installer and download CSD
-    if [ ! -d /opt/cache/csd-installer.sh ]; then \
-        wget -O /opt/cache/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/cache/csd-installer.sh; \
-    fi && \
+    wget -O /opt/cache/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/cache/csd-installer.sh; \
     /opt/cache/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
 
 FROM base-packages AS python-setup

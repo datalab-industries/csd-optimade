@@ -59,7 +59,6 @@ target "csd-optimade-server" {
   cache-from = [
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
-    "type=gha",
   ]
   cache-to = ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
   secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
