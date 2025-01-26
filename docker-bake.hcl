@@ -30,13 +30,14 @@ variable "CSD_INSTALLER_URL" {
 
 // Used in the CI to appropriately tag the images
 // based on events
-#target "docker-metadata-action" {}
+target "docker-metadata-action" {}
 
 group "default" {
   targets = ["csd-ingester-test", "csd-optimade-server"]
 }
 
 target "csd-ingester-test" {
+  inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-ingester-test"
@@ -51,6 +52,7 @@ target "csd-ingester-test" {
 }
 
 target "csd-optimade-server" {
+  inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
   args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES}
@@ -60,6 +62,6 @@ target "csd-optimade-server" {
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
   ]
-  cache-to = ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
+  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}:cache,mode=max"]
   secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
 }
