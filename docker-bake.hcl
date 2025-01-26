@@ -18,6 +18,16 @@ variable "CSD_NUM_STRUCTURES" {
   default = 100000
 }
 
+variable "CSD_CHUNK_SIZE" {
+  // Number of structures to ingest per chunk (default: all)
+  default = 5000
+}
+
+variable "CSD_NUM_PROCESSES" {
+    // Number of processes to use for ingesting the CSD
+    default = 4
+}
+
 variable "CSD_ACTIVATION_KEY" {
   // Active CSD license key required both as build and runtime
   default = ""
@@ -30,13 +40,14 @@ variable "CSD_INSTALLER_URL" {
 
 // Used in the CI to appropriately tag the images
 // based on events
-#target "docker-metadata-action" {}
+target "docker-metadata-action" {}
 
 group "default" {
   targets = ["csd-ingester-test", "csd-optimade-server"]
 }
 
 target "csd-ingester-test" {
+  inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
   target = "csd-ingester-test"
@@ -51,15 +62,16 @@ target "csd-ingester-test" {
 }
 
 target "csd-optimade-server" {
+  inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
-  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES}
+  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES, CSD_CHUNK_SIZE = CSD_CHUNK_SIZE, CSD_NUM_PROCESSES = CSD_NUM_PROCESSES}
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
   cache-from = [
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
   ]
-  cache-to = ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
+  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}:cache,mode=max"]
   secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
 }
