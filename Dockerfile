@@ -38,8 +38,8 @@ RUN \
     # Mount and then source any .env secrets that are required to download and activate the CSD
     --mount=type=secret,id=csd-installer-url,env=CSD_INSTALLER_URL \
     # Download/use the installer and download CSD
-    wget -O /opt/cache/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/cache/csd-installer.sh; \
-    /opt/cache/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
+    wget -O /opt/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/csd-installer.sh; \
+    /opt/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
 
 FROM base-packages AS python-setup
 
@@ -90,7 +90,12 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     mkdir -p data && \
     # For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
     mkdir -p /opt/ccdc/ccdc-software && \
-    uv run --no-sync csd-ingest --num-structures ${CSD_NUM_STRUCTURES} && \
+    # Actually run the ingestion with the given args
+    uv run --no-sync \
+      csd-ingest \
+      --chunk-size ${CSD_CHUNK_SIZE} \
+      --num-processes ${CSD_NUM_PROCESSES} \
+      --num-structures ${CSD_NUM_STRUCTURES} && \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
     gzip -9 /opt/csd-optimade/csd-optimade.jsonl && \
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/csd-optimade.jsonl.gz
