@@ -118,7 +118,7 @@ def cli():
             ):
                 total_bad += bad_count
                 total += total_count
-                pbar.update(total)
+                pbar.update(total_count)
                 try:
                     pbar.set_postfix({"% bad": 100 * (total_bad / total)})
                 except ZeroDivisionError:
