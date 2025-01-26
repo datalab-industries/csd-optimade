@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+BAD_IDENTIFIERS = {"QIJZOB"}
+
 import glob
 import itertools
 import json
@@ -36,6 +38,8 @@ def from_csd_database(
     """
     chunked_structures = [entry for entry in [reader[r] for r in range_]]
     for entry in chunked_structures:
+        if entry.identifier in BAD_IDENTIFIERS:
+            continue
         try:
             data, included = mapper(entry)
             yield data.model_dump_json(exclude_unset=True, exclude_none=True)
