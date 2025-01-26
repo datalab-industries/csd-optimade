@@ -54,12 +54,12 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
     with open(f"data/{run_name}-optimade-{str_chunk_id}.jsonl", "w") as f:
         try:
             for entry in from_csd_database(ccdc.io.EntryReader("CSD"), range_):
+                total_count += 1
                 if isinstance(entry, Exception):
                     bad_count += 1
                     continue
                 else:
                     f.write(entry + "\n")
-                total_count += 1
         except RuntimeError:
             # The database iterator raises RuntimeError once we are out of bounds
             pass
