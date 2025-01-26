@@ -65,7 +65,7 @@ target "csd-optimade-server" {
   inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
-  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES}
+  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES, CSD_CHUNK_SIZE = CSD_CHUNK_SIZE, CSD_NUM_PROCESSES = CSD_NUM_PROCESSES}
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
   cache-from = [
