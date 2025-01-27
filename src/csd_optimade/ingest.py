@@ -5,8 +5,11 @@ BAD_IDENTIFIERS = {"QIJZOB"}
 import glob
 import itertools
 import json
+import math
 import os
 import tempfile
+import time
+import warnings
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Callable
@@ -14,6 +17,7 @@ from typing import TYPE_CHECKING, Callable
 import ccdc.crystal
 import ccdc.entry
 import ccdc.io
+import psutil
 import tqdm
 
 if TYPE_CHECKING:
@@ -78,27 +82,62 @@ def cli():
     from multiprocessing import Pool
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--num-processes", type=int, default=4)
-    parser.add_argument("--chunk-size", type=int, default=10_000)
+    parser.add_argument(
+        "--num-processes",
+        type=int,
+        default=psutil.cpu_count(logical=False),
+        help="Number of processes to use (DEFAULT: all physical cores on machine).",
+    )
+    parser.add_argument(
+        "--chunk-size",
+        type=int,
+        default=None,
+        help="Number of structures to process in each chunk (DEFAULT: set automatically based on available memory and process count",
+    )
     parser.add_argument(
         "--num-structures",
         type=int,
         nargs="?",
         const=int(1_290_000),
         default=int(1_290_000),
+        help="Number of structures from the CSD to ingest (DEFAULT: all)",
     )
     parser.add_argument("--run-name", type=str, default="csd")
 
     args = parser.parse_args()
 
     pool_size = args.num_processes
+    if pool_size is None:
+        pool_size = psutil.cpu_count(logical=False)
+    elif pool_size > psutil.cpu_count(logical=False):
+        warnings.warn(
+            f"WARNING: Requested {pool_size} processes, but only {psutil.cpu_count(logical=False)} physical cores available. Waiting 5 seconds before continuing..."
+        )
+        time.sleep(5)
+
+    available_memory = 0.8 * psutil.virtual_memory().available / 1024**3 / pool_size
+
     chunk_size = args.chunk_size
+    base_memory_gb = 0.5
+    memory_per_item_gb = 2.5 / 10_000
+    if chunk_size is None:
+        # Get available memory in GB and attempt to use 80%
+        # Assuming approximately 3 GB for chunk_size 10_000 and a minimum for 500 MB per process to load the DB
+        chunk_size = int((available_memory - base_memory_gb) / memory_per_item_gb)
+
+    estimated_peak_memory_usage = base_memory_gb + memory_per_item_gb * chunk_size
+    if estimated_peak_memory_usage > available_memory:
+        warnings.warn(
+            f"WARNING: Estimated peak memory usage per process {estimated_peak_memory_usage} GB for {chunk_size=} exceeds available memory per process {available_memory} GB. Waiting 5 seconds before continuing..."
+        )
+        time.sleep(5)
+
     if chunk_size > int(args.num_structures):
         chunk_size = int(args.num_structures)
         num_chunks = 1
         pool_size = 1
     else:
-        num_chunks = int(args.num_structures) // chunk_size
+        num_chunks = math.ceil(args.num_structures / chunk_size)
 
     run_name = args.run_name
 

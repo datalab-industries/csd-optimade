@@ -18,16 +18,6 @@ variable "CSD_NUM_STRUCTURES" {
   default = 100000
 }
 
-variable "CSD_CHUNK_SIZE" {
-  // Number of structures to ingest per chunk (default: all)
-  default = 1000
-}
-
-variable "CSD_NUM_PROCESSES" {
-    // Number of processes to use for ingesting the CSD
-    default = 1
-}
-
 variable "CSD_ACTIVATION_KEY" {
   // Active CSD license key required both as build and runtime
   default = ""

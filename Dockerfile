@@ -82,8 +82,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
 ARG CSD_NUM_STRUCTURES=
-ARG CSD_CHUNK_SIZE=
-ARG CSD_NUM_PROCESSES=
 
 # Mount secrets to manually activate the CSD only when needed during ingestion
 RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
@@ -95,8 +93,6 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     # Actually run the ingestion with the given args
     uv run --no-sync \
       csd-ingest \
-      --chunk-size ${CSD_CHUNK_SIZE} \
-      --num-processes ${CSD_NUM_PROCESSES} \
       --num-structures ${CSD_NUM_STRUCTURES} && \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
     gzip -9 /opt/csd-optimade/csd-optimade.jsonl && \
