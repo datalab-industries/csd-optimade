@@ -41,6 +41,7 @@ dev = [
 
 ingest = [
     "csd-python-api >= 3, < 4",  # requires https://pip.ccdc.cam.ac.uk registry
+    "psutil ~= 6.1"
 ]
 
 [build-system]
