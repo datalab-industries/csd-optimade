@@ -15,7 +15,7 @@ variable "VERSION" {
 
 variable "CSD_NUM_STRUCTURES" {
   // Number of structures to ingest (default: all)
-  default = 100000
+  default = ""
 }
 
 variable "CSD_ACTIVATION_KEY" {
