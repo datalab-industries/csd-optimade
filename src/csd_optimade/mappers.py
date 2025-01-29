@@ -4,6 +4,7 @@ import datetime
 import math
 import random
 import string
+import warnings
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -38,6 +39,9 @@ def _reduce_csd_formula(formula: str) -> str:
             f"{e}{formula_dct[e] // reducer if formula_dct[e] != reducer else ''}"
         )
 
+    if not formula_str:
+        raise RuntimeError(f"Unable to create formula for {formula}")
+
     return formula_str
 
 
@@ -49,7 +53,15 @@ def from_csd_entry_directly(
 
     """
     asym_unit = entry.crystal.asymmetric_unit_molecule
+
     elements = {d.atomic_symbol for d in asym_unit.atoms}
+
+    optimade_elements = elements.copy()
+    # Replace deuterium with H
+    if "D" in elements:
+        optimade_elements.remove("D")
+        optimade_elements.add("H")
+
     try:
         positions = [
             [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
@@ -110,6 +122,14 @@ def from_csd_entry_directly(
     if not inchi.success:
         inchi = None
 
+    try:
+        reduced_formula = _reduce_csd_formula(asym_unit.formula)
+    except Exception:
+        warnings.warn(
+            f"Unable to reduce formula for {entry.identifier}: {entry.formula}"
+        )
+        reduced_formula = None
+
     resource = StructureResource(
         **{
             "id": entry.identifier,
@@ -121,14 +141,19 @@ def from_csd_entry_directly(
             "attributes": StructureResourceAttributes(
                 last_modified=now,
                 chemical_formula_descriptive=entry.formula,
-                chemical_formula_reduced=_reduce_csd_formula(asym_unit.formula),
-                elements=sorted(list(elements)),
+                chemical_formula_reduced=reduced_formula,
+                elements=sorted(list(optimade_elements)),
                 dimension_types=(1, 1, 1),
                 nperiodic_dimensions=3,
-                nelements=len(elements),
+                nelements=len(optimade_elements),
                 nsites=len(positions) if positions else None,
+                # Make sure the "D" is remapped to "H" in the species list, but continue using it in the sites list
                 species=[
-                    Species(chemical_symbols=[e], name=e, concentration=[1.0])
+                    Species(
+                        chemical_symbols=[e if e != "D" else "H"],
+                        name=e,
+                        concentration=[1.0],
+                    )
                     for e in elements
                 ]
                 if positions
