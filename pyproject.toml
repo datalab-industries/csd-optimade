@@ -78,3 +78,8 @@ follow_imports = "skip"
 [tool.pytest.ini_options]
 testpaths = "tests"
 addopts = "-rs"
+filterwarnings = [
+    "error",
+    "ignore:.*total_num_atoms.*:RuntimeWarning",
+    "ignore:.*unable to reduce formula.*:UserWarning"
+]
