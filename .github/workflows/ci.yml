@@ -79,6 +79,7 @@ jobs:
           /usr/local/share/chromium \
           /usr/local/share/powershell \
           /usr/share/swift
+        df -h
 
     - name: Build latest changes
       uses: docker/bake-action@v6
