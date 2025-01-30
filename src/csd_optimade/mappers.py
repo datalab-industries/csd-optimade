@@ -62,22 +62,41 @@ def from_csd_entry_directly(
         optimade_elements.remove("D")
         optimade_elements.add("H")
 
-    try:
-        positions: list | None = [
-            [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
-            for atom in asym_unit.atoms
-        ]
-        # Handle case that asym_unit.atoms is []
-        if not positions:
-            positions = None
-    except AttributeError:
-        positions = None
     now = datetime.datetime.now()
     now = now.replace(microsecond=0)
     dep_date: datetime.datetime | datetime.date | None = entry.deposition_date
     dep_date = (
         datetime.datetime.fromisoformat(dep_date.isoformat()) if dep_date else None
     )
+
+    positions: list | None = None
+    lattice_params: list[list[float | None]] = [[None, None, None], [None, None, None]]
+    cell_volume: float | None = None
+    if entry.has_3d_structure:
+        try:
+            positions = [
+                [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
+                for atom in asym_unit.atoms
+            ]
+            # Handle case that asym_unit.atoms is []
+            if not positions:
+                positions = None
+        except AttributeError:
+            positions = None
+
+        lattice_params = [
+            [
+                entry.crystal.cell_lengths.a,
+                entry.crystal.cell_lengths.b,
+                entry.crystal.cell_lengths.c,
+            ],
+            [
+                entry.crystal.cell_angles.alpha,
+                entry.crystal.cell_angles.beta,
+                entry.crystal.cell_angles.gamma,
+            ],
+        ]
+        cell_volume = entry.crystal.cell_volume
 
     def _get_citations(entry) -> list[ReferenceResource]:
         citations = []
@@ -168,19 +187,16 @@ def from_csd_entry_directly(
                 else None,
                 structure_features=[],
                 # Add custom CSD-specific fields
-                _csd_lattice_parameters=[
-                    [
-                        entry.crystal.cell_lengths.a,
-                        entry.crystal.cell_lengths.b,
-                        entry.crystal.cell_lengths.c,
-                    ],
-                    [
-                        entry.crystal.cell_angles.alpha,
-                        entry.crystal.cell_angles.beta,
-                        entry.crystal.cell_angles.gamma,
-                    ],
-                ],
+                _csd_lattice_parameter_a=lattice_params[0][0],
+                _csd_lattice_parameter_b=lattice_params[0][1],
+                _csd_lattice_parameter_c=lattice_params[0][2],
+                _csd_lattice_parameter_alpha=lattice_params[1][0],
+                _csd_lattice_parameter_beta=lattice_params[1][1],
+                _csd_lattice_parameter_gamma=lattice_params[1][2],
+                _csd_cell_volume=cell_volume,
+                _csd_crystal_system=entry.crystal.crystal_system,
                 _csd_space_group_symbol_hermann_mauginn=entry.crystal.spacegroup_symbol,  # Need to double-check if this matches OPTIMADE 1.2 definition
+                _csd_chemical_name=entry.chemical_name,
                 _csd_inchi=inchi.inchi if inchi else None,
                 _csd_inchi_key=inchi.key if inchi else None,
                 _csd_smiles=asym_unit.smiles,
