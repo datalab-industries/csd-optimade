@@ -79,9 +79,53 @@ def cli():
         provider_fields={
             "structures": [
                 {
-                    "name": "_csd_lattice_parameters",
+                    "name": "_csd_chemical_name",
+                    "type": "string",
+                    "description": "The name of the chemical as given in the CSD.",
+                },
+                {
+                    "name": "_csd_cell_volume",
                     "type": "float",
-                    "description": "The ((a, b, c), (alpha, beta, gamma)) unit cell parameters.",
+                    "description": "The volume of the unit cell in cubic angstroms.",
+                    "unit": "angstrom^3",  # TODO: check this against latest schema
+                },
+                {
+                    "name": "_csd_lattice_parameter_a",
+                    "type": "float",
+                    "description": "The a lattice parameter in angstroms.",
+                    "unit": "angstrom",
+                },
+                {
+                    "name": "_csd_lattice_parameter_b",
+                    "type": "float",
+                    "description": "The b lattice parameter in angstroms.",
+                    "unit": "angstrom",
+                },
+                {
+                    "name": "_csd_lattice_parameter_c",
+                    "type": "float",
+                    "description": "The c lattice parameter in angstroms.",
+                    "unit": "angstrom",
+                },
+                {
+                    "name": "_csd_lattice_parameter_alpha",
+                    "type": "float",
+                    "description": "The alpha lattice parameter in degrees.",
+                },
+                {
+                    "name": "_csd_lattice_parameter_beta",
+                    "type": "float",
+                    "description": "The beta lattice parameter in degrees.",
+                },
+                {
+                    "name": "_csd_lattice_parameter_gamma",
+                    "type": "float",
+                    "description": "The gamma lattice parameter in degrees.",
+                },
+                {
+                    "name": "_csd_crystal_system",
+                    "type": "string",
+                    "description": "The crystal system of the structure.",
                 },
                 {
                     "name": "_csd_deposition_date",
