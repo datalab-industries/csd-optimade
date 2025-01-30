@@ -63,10 +63,13 @@ def from_csd_entry_directly(
         optimade_elements.add("H")
 
     try:
-        positions = [
+        positions: list | None = [
             [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
             for atom in asym_unit.atoms
         ]
+        # Handle case that asym_unit.atoms is []
+        if not positions:
+            positions = None
     except AttributeError:
         positions = None
     now = datetime.datetime.now()
