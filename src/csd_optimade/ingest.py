@@ -1,6 +1,9 @@
 from __future__ import annotations
 
-BAD_IDENTIFIERS = {"QIJZOB"}
+BAD_IDENTIFIERS = {
+    "QIJZOB",  # hangs infinitely during mapping
+    "VOHZIB",  # no 3D structure
+}
 
 import glob
 import itertools
