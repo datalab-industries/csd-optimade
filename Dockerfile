@@ -173,6 +173,60 @@ EOF
 RUN chmod +x /opt/csd-optimade/test-entrypoint.sh
 CMD ["/opt/csd-optimade/test-entrypoint.sh"]
 
+FROM python-setup AS csd-optimade-server-with-csd-sidecar
+
+LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
+LABEL org.opencontainers.image.description="Server environment for the csd-optimade project"
+
+# Copy the CSD data into the serve image
+WORKDIR /opt/ccdc/ccdc-data
+COPY --from=compress-csd-data /opt/csd.tar.gz.gpg /opt/csd.tar.gz.gpg
+
+WORKDIR /opt/csd-optimade
+ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
+
+# Copy the ingested CSD into the final image
+COPY --from=csd-ingester /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/csd-optimade.jsonl.gz.gpg
+
+# Copy relevant csd-optimade build files only
+COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
+COPY src /opt/csd-optimade/src
+
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --extra-index-url https://pip.ccdc.cam.ac.uk && \
+    # Remove unecessary mandatory deps from csd-python-api
+    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12 && \
+    # Remove duplicated csd-python-api install
+    rm -rf /opt/csd-optimade/.venv/lib/python3.11/site-packages/lib/ccdc
+
+COPY <<-"EOF" /opt/csd-optimade/serve-entrypoint.sh
+#!/bin/bash
+set -e
+
+if [ -z "$CSD_ACTIVATION_KEY" ]; then
+ echo "CSD_ACTIVATION_KEY not set" >&2
+ exit 1
+fi
+
+mkdir -p /root/.config/CCDC
+echo -e "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini
+# For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
+mkdir -p /opt/ccdc/ccdc-software
+
+echo "Decrypting CSD data..."
+time gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz
+time tar -xzf /opt/csd.tar.gz -C /opt/ccdc/ccdc-data
+echo "Decompressing CSD data..."
+
+echo "Decrypting and decompressing CSD OPTIMADE format..."
+gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl
+
+exec uv run --no-sync csd-serve --drop-first /opt/csd-optimade/csd-optimade.jsonl
+EOF
+
+RUN chmod +x /opt/csd-optimade/serve-entrypoint.sh
+CMD ["/opt/csd-optimade/serve-entrypoint.sh"]
+
 FROM python-setup AS csd-optimade-server
 LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
 LABEL org.opencontainers.image.description="Production environment for the csd-optimade project"
