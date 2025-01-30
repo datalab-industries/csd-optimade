@@ -25,7 +25,7 @@ def _reduce_csd_formula(formula: str) -> str:
     import re
 
     formula_dct = {}
-    for e in formula.strip(")n").split(" "):
+    for e in formula.strip("(").strip(")n").split(" "):
         matches = re.match(r"([a-zA-Z]+)([0-9]*)", e)
         if matches:
             species, count = matches.groups()
@@ -139,6 +139,7 @@ def from_csd_entry_directly(
                 "self": f"https://www.ccdc.cam.ac.uk/structures/Search?Ccdcid={entry.identifier}"
             },
             "attributes": StructureResourceAttributes(
+                immutable_id=entry.identifier,
                 last_modified=now,
                 chemical_formula_descriptive=entry.formula,
                 chemical_formula_reduced=reduced_formula,
