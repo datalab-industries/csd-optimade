@@ -133,6 +133,11 @@ def cli():
                     "description": "The date the structure was deposited.",
                 },
                 {
+                    "name": "_csd_disorder_details",
+                    "type": "string",
+                    "description": "Human-readable details of any disorder in the structure.",
+                },
+                {
                     "name": "_csd_ccdc_number",
                     "type": "integer",
                     "description": "The CCDC deposition ID.",

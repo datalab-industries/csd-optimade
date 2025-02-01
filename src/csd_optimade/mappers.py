@@ -185,7 +185,7 @@ def from_csd_entry_directly(
                 species_at_sites=[atom.atomic_symbol for atom in asym_unit.atoms]
                 if positions
                 else None,
-                structure_features=[],
+                structure_features=["disorder"] if entry.has_disorder else [],
                 # Add custom CSD-specific fields
                 _csd_lattice_parameter_a=lattice_params[0][0],
                 _csd_lattice_parameter_b=lattice_params[0][1],
@@ -204,6 +204,7 @@ def from_csd_entry_directly(
                 _csd_z_prime=entry.crystal.z_prime,
                 _csd_ccdc_number=entry.ccdc_number,
                 _csd_deposition_date={"$date": dep_date},
+                _csd_disorder_details=entry.disorder_details,
             ),
         }
     )
