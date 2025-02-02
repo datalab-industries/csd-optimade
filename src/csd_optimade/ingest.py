@@ -179,17 +179,6 @@ def cli():
     )
 
     with open(tmp_jsonl_path, "w") as tmp_jsonl:
-        # Write headers
-        tmp_jsonl.write(
-            json.dumps({"x-optimade": {"meta": {"api_version": "1.1.0"}}}) + "\n"
-        )
-        tmp_jsonl.write(
-            _construct_entry_type_info(
-                "structures", properties=[], provider_prefix=""
-            ).model_dump_json()
-            + "\n"
-        )
-
         for filename in input_files:
             file = Path(filename)
             with open(file) as infile:
@@ -199,7 +188,18 @@ def cli():
 
     with open(tmp_jsonl_path) as tmp_jsonl:
         ids_by_type: dict[str, set] = {}
-        with open(output_file, "a") as final_jsonl:
+        with open(output_file, "w") as final_jsonl:
+            # Write headers
+            final_jsonl.write(
+                json.dumps({"x-optimade": {"meta": {"api_version": "1.1.0"}}}) + "\n"
+            )
+            final_jsonl.write(
+                _construct_entry_type_info(
+                    "structures", properties=[], provider_prefix=""
+                ).model_dump_json()
+                + "\n"
+            )
+
             for line_entry in tmp_jsonl:
                 if not line_entry.strip():
                     continue
