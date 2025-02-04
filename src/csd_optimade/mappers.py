@@ -221,6 +221,7 @@ def from_csd_entry_directly(
                 _csd_ccdc_number=entry.ccdc_number,
                 _csd_deposition_date={"$date": dep_date},
                 _csd_disorder_details=entry.disorder_details,
+                _csd_remarks=entry.remarks if entry.remarks else None,
             ),
         }
     )
