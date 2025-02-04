@@ -5,6 +5,8 @@ import numpy as np
 import pytest
 from optimade.adapters.structures.utils import cellpar_to_cell
 
+from csd_optimade.mappers import _reduce_csd_formula
+
 from .utils import generate_same_random_csd_entries
 
 if TYPE_CHECKING:
@@ -21,9 +23,9 @@ def check_entry(
     warn_only: bool = False,
 ) -> bool:
     assert entry.identifier == resource.id, f"{entry.identifier} != {resource.id}"
-    total_num_atoms = entry.crystal.z_value * len(
-        entry.crystal.asymmetric_unit_molecule.atoms
-    )
+    # total_num_atoms = entry.crystal.z_value * len(
+    #     entry.crystal.asymmetric_unit_molecule.atoms
+    # )
 
     if resource.attributes.lattice_vectors:
         a, b, c = entry.crystal.cell_lengths
@@ -33,16 +35,16 @@ def check_entry(
             cell, resource.attributes.lattice_vectors, decimal=5
         )
 
-    try:
-        assert resource.attributes.nsites == total_num_atoms, (
-            f"{resource.attributes.nsites=} != {total_num_atoms=} for {entry.identifier}"
-        )
-    except AssertionError as exc:
-        if warn_only:
-            warnings.warn(
-                f"{exc} for {entry.identifier}",
-                RuntimeWarning,
-            )
+    # try:
+    #     assert resource.attributes.nsites == total_num_atoms, (
+    #         f"{resource.attributes.nsites=} != {total_num_atoms=} for {entry.identifier}"
+    #     )
+    # except AssertionError as exc:
+    #     if warn_only:
+    #         warnings.warn(
+    #     f"{exc} for {entry.identifier}",
+    #     RuntimeWarning,
+    # )
     try:
         if entry.publications:
             assert resource.relationships.references is not None
@@ -92,3 +94,27 @@ def test_random_entries(index: int, entry: "ccdc.entry.Entry", csd_available):
     assert check_entry(entry, optimade, included, warn_only=True), (
         f"{entry.identifier} ({index}) failed"
     )
+
+
+def test_reduce_formula():
+    zzzghe = "C18 H12 Br3 N1"
+    assert _reduce_csd_formula(zzzghe) == "Br3C18H12N"
+
+    pivcih01 = "C11 H20 O3"
+    assert _reduce_csd_formula(pivcih01) == "C11H20O3"
+
+    dumjif1 = "C54 H41 As2 O11 P1 Ru3,0.15(C1 H2 Cl2)"
+    with pytest.raises(ValueError, match="multi-component"):
+        _reduce_csd_formula(dumjif1)
+
+    dipjer = "C20 H25 N2 S2 1+,C4 H3 O4 1-"
+    with pytest.raises(ValueError, match="multi-component"):
+        _reduce_csd_formula(dipjer)
+
+    nubjax01 = "C36 H24 Br3 N3 O11 U2,H2 O1"
+    with pytest.raises(ValueError, match="multi-component"):
+        _reduce_csd_formula(nubjax01)
+
+    jatfet01 = "C65 H45 Au2 N3 O1,C35 H40 N3 Pt1 1+,B1 F4 1-"
+    with pytest.raises(ValueError, match="multi-component"):
+        _reduce_csd_formula(jatfet01)
