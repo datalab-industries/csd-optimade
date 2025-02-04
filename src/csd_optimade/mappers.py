@@ -84,12 +84,13 @@ def from_csd_entry_directly(
     lattice_params: list[list[float | None]] = [[None, None, None], [None, None, None]]
     cell_volume: float | None = None
     if entry.has_3d_structure:
+        packed_mol = entry.crystal.packing()
         try:
             positions = [
                 [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
-                for atom in asym_unit.atoms
+                for atom in packed_mol.atoms
             ]
-            # Handle case that asym_unit.atoms is []
+            # Handle case that atoms is []
             if not positions:
                 positions = None
         except AttributeError:
@@ -198,7 +199,7 @@ def from_csd_entry_directly(
                 if positions
                 else None,
                 cartesian_site_positions=positions,
-                species_at_sites=[atom.atomic_symbol for atom in asym_unit.atoms]
+                species_at_sites=[atom.atomic_symbol for atom in packed_mol.atoms]
                 if positions
                 else None,
                 structure_features=["disorder"] if entry.has_disorder else [],
