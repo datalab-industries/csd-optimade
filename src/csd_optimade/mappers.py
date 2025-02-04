@@ -39,10 +39,10 @@ def _reduce_csd_formula(formula: str) -> str:
             species, count = matches.groups()
             formula_dct[species] = int(count) if count else 1
 
-    reducer = math.gcd(*formula_dct.values())
-
     if "D" in formula_dct:
         formula_dct["H"] = formula_dct.get("H", 0) + formula_dct.pop("D")
+
+    reducer = math.gcd(*formula_dct.values())
 
     formula_str: str = ""
     for e in sorted(formula_dct):
