@@ -95,5 +95,10 @@ def generate_csd_provider_fields():
                 "type": "integer",
                 "description": "The number of formula units in the asymmetric unit.",
             },
+            {
+                "name": "_csd_remarks",
+                "type": "string",
+                "description": "Free-text remarks about the structure.",
+            },
         ]
     }
