@@ -7,6 +7,8 @@ import string
 import warnings
 from typing import TYPE_CHECKING
 
+from optimade.models.utils import anonymize_formula
+
 if TYPE_CHECKING:
     import ccdc.crystal
     import ccdc.entry
@@ -23,6 +25,12 @@ from optimade.models import (
 
 def _reduce_csd_formula(formula: str) -> str:
     import re
+
+    if "," in formula:
+        raise ValueError(f"Cannot reduce multi-component formula: {formula}")
+
+    if not formula:
+        raise ValueError("Cannot reduce non-existent formula")
 
     formula_dct = {}
     for e in formula.strip("(").strip(")n").split(" "):
@@ -148,10 +156,12 @@ def from_csd_entry_directly(
         inchi = None
 
     try:
-        reduced_formula = _reduce_csd_formula(asym_unit.formula)
-    except Exception:
+        reduced_formula = _reduce_csd_formula(entry.formula)
+    except ValueError:
+        reduced_formula = None
+    except RuntimeError:
         warnings.warn(
-            f"Unable to reduce formula for {entry.identifier}: {entry.formula}"
+            f"Unable to reduce formula for {entry.identifier}: {entry.formula} / {asym_unit.formula}"
         )
         reduced_formula = None
 
@@ -166,6 +176,9 @@ def from_csd_entry_directly(
             "attributes": StructureResourceAttributes(
                 immutable_id=entry.identifier,
                 last_modified=now,
+                chemical_formula_anonymous=anonymize_formula(reduced_formula)
+                if reduced_formula
+                else None,
                 chemical_formula_descriptive=entry.formula,
                 chemical_formula_reduced=reduced_formula,
                 elements=sorted(list(optimade_elements)),
