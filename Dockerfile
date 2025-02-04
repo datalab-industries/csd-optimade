@@ -185,11 +185,12 @@ fi
 
 gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl
 
-
+# Each process must run in the original env, which then gets modified
+env > /tmp/initial_env
 # Start the database insertion process with the app on an alternative port
-uv run csd-serve --port 5001 --insert-only --drop-first /opt/csd-optimade/csd-optimade.jsonl &
+env -i /tmp/intial_env uv run csd-serve --port 5001 --insert-only --drop-first /opt/csd-optimade/csd-optimade.jsonl &
 # Start the API server in the background without database operations
-uv run --no-insert csd-serve /opt/csd-optimade/csd-optimade.jsonl
+env -i /tmp/initial_env uv run --no-insert csd-serve /opt/csd-optimade/csd-optimade.jsonl
 
 RUN chmod +x /entrypoint.sh
 CMD ["/entrypoint.sh"]

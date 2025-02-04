@@ -20,6 +20,11 @@ def cli():
         help="Do not insert the JSONL file into the database.",
     )
     parser.add_argument(
+        "--insert-only",
+        action="store_true",
+        help="Exit the API after inserting the JSONL file into the database.",
+    )
+    parser.add_argument(
         "--drop-first",
         action="store_true",
         help="Drop the database before inserting the JSONL file.",
@@ -71,6 +76,9 @@ def cli():
 
         if args.drop_first and test_client:
             test_client.drop_database(database_name)
+
+        if args.insert_only:
+            override_kwargs["exit_after_insert"] = True
 
     optimake_server = OptimakeServer(
         jsonl_path,
