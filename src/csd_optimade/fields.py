@@ -92,7 +92,7 @@ def generate_csd_provider_fields():
             },
             {
                 "name": "_csd_z_prime",
-                "type": "integer",
+                "type": "float",
                 "description": "The number of formula units in the asymmetric unit.",
             },
             {
