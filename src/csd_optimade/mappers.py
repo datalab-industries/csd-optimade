@@ -33,6 +33,9 @@ def _reduce_csd_formula(formula: str) -> str:
 
     reducer = math.gcd(*formula_dct.values())
 
+    if "D" in formula_dct:
+        formula_dct["H"] = formula_dct.get("H", 0) + formula_dct.pop("D")
+
     formula_str: str = ""
     for e in sorted(formula_dct):
         formula_str += (
