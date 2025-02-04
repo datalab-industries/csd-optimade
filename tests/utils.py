@@ -58,9 +58,8 @@ class MockCSDEntry:
     crystal: MockCSDCrystal = MockCSDCrystal()
 
 
-def generate_same_random_csd_entries(csd_available=True):
+def generate_same_random_csd_entries(csd_available=True, num_entries=1000):
     """Pick some random entries from the CSD, with a fixed seed."""
-    num_entries: int = 1000
     if not csd_available:
         warnings.warn("CSD not available")
         yield zip(range(num_entries), num_entries * [MockCSDEntry()])
@@ -70,24 +69,20 @@ def generate_same_random_csd_entries(csd_available=True):
 
         from ccdc.io import EntryReader
 
-        from csd_optimade.ingest import BAD_IDENTIFIERS
-
         random.seed(0)
         entry_indices = set()
-        entries = []
         max_n: int = int(1.29e6)
+        n_trials: int = 0
 
         with EntryReader("CSD") as reader:
-            while len(entry_indices) < num_entries:
+            while n_trials < num_entries:
                 i = random.randint(0, max_n)
                 if i not in entry_indices:
                     try:
                         entry = reader[i]
                         if entry:
-                            if entry.identifier in BAD_IDENTIFIERS:
-                                continue
-                            entries.append((i, entry))
+                            yield (i, entry)
+                            n_trials += 1
                             entry_indices.add(i)
                     except Exception:
                         continue
-            yield from entries

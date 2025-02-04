@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from optimade.models import Resource, StructureResource
 
 TEST_ENTRIES = generate_same_random_csd_entries()
+TEST_ENTRIES_BIG = generate_same_random_csd_entries(num_entries=100_000)
 
 
 def check_entry(
@@ -94,6 +95,20 @@ def test_random_entries(index: int, entry: "ccdc.entry.Entry", csd_available):
     assert check_entry(entry, optimade, included, warn_only=True), (
         f"{entry.identifier} ({index}) failed"
     )
+
+
+def test_random_entries_big(csd_available):
+    if not csd_available:
+        pytest.skip("CSD not available")
+    from csd_optimade.mappers import from_csd_entry_directly
+
+    mapper = from_csd_entry_directly
+
+    for index, entry in TEST_ENTRIES_BIG:
+        optimade, included = mapper(entry)
+        assert check_entry(entry, optimade, included, warn_only=True), (
+            f"{entry.identifier} ({index}) failed"
+        )
 
 
 def test_reduce_formula():
