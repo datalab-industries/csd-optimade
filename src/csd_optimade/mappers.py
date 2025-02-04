@@ -159,7 +159,7 @@ def from_csd_entry_directly(
         reduced_formula = _reduce_csd_formula(entry.formula)
     except ValueError:
         reduced_formula = None
-    except RuntimeError:
+    except Exception:
         warnings.warn(
             f"Unable to reduce formula for {entry.identifier}: {entry.formula} / {asym_unit.formula}"
         )
