@@ -166,7 +166,7 @@ ingest = [
 requires-dist = [
     { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
-    { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=ml-evs%2Fjsonl-relationships-links" },
+    { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=ml-evs%2Ffix-disorder-validation" },
     { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "psutil", marker = "extra == 'ingest'", specifier = "~=6.1" },
@@ -607,8 +607,8 @@ wheels = [
 
 [[package]]
 name = "optimade"
-version = "1.1.9"
-source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=ml-evs%2Fjsonl-relationships-links#cfc3e7af4077747707f239770762787289b502ff" }
+version = "1.1.10"
+source = { git = "https://github.com/Materials-Consortia/optimade-python-tools.git?rev=ml-evs%2Ffix-disorder-validation#47386b737e7585de35322d97209ffd0a369260bc" }
 dependencies = [
     { name = "lark" },
     { name = "pydantic", extra = ["email"] },

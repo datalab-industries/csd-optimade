@@ -20,7 +20,7 @@ classifiers = [
 ]
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
-    "optimade @ git+https://github.com/Materials-Consortia/optimade-python-tools.git@ml-evs/jsonl-relationships-links",
+    "optimade @ git+https://github.com/Materials-Consortia/optimade-python-tools.git@ml-evs/fix-disorder-validation",
     "optimade-maker @ git+https://github.com/materialscloud-org/optimade-maker.git@ml-evs/qol-server",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
@@ -80,6 +80,4 @@ testpaths = "tests"
 addopts = "-rs"
 filterwarnings = [
     "error",
-    "ignore:.*total_num_atoms.*:RuntimeWarning",
-    "ignore:.*unable to reduce formula.*:UserWarning"
 ]
