@@ -72,6 +72,8 @@ def cli():
         if args.drop_first and test_client:
             test_client.drop_database(database_name)
 
+    override_kwargs["license"] = "https://www.ccdc.cam.ac.uk/licence-agreement"
+
     optimake_server = OptimakeServer(
         jsonl_path,
         args.port,
@@ -82,6 +84,7 @@ def cli():
             "prefix": "csd",
             "name": "Cambridge Structural Database",
             "description": "A database of crystal structures curated by the Cambridge Crystallographic Data Centre.",
+            "homepage=": "https://www.ccdc.cam.ac.uk",
         },
         **override_kwargs,
     )
