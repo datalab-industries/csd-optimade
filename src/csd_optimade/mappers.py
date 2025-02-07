@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     import ccdc.crystal
     import ccdc.entry
     import ccdc.io
+    import ccdc.molecule
 
 from optimade.models import (
     ReferenceResource,
@@ -22,8 +23,56 @@ from optimade.models import (
     StructureResourceAttributes,
 )
 
+NOW = datetime.datetime.now()
+NOW = NOW.replace(microsecond=0)
 
-def _reduce_csd_formula(formula: str) -> str:
+
+def _get_citations(entry) -> list[ReferenceResource]:
+    """Return attached reference resources given the CSD API citation format."""
+    citations = []
+    for citation in entry.publications:
+        # Use the DOI as OPTIMADE identifier, if available, otherwise generate one
+        # from first author, year and random string (cannot detect duplicates)
+        _id = citation.doi
+        if _id is None:
+            first_author = citation.authors.split(", ")[0].split(".")[-1].split(" ")[-1]
+            _id = f"{first_author}{citation.year}-{''.join(random.choices(string.ascii_lowercase, k=6))}"
+
+        citations.append(
+            ReferenceResource(
+                id=_id,
+                type="references",
+                attributes=ReferenceResourceAttributes(
+                    last_modified=NOW,
+                    authors=[
+                        {"name": author} for author in citation.authors.split(", ")
+                    ],
+                    year=str(
+                        citation.year
+                    ),  # Potential specification bug that this value should be a string
+                    journal=citation.journal.full_name,
+                    volume=str(citation.volume),
+                    pages=str(citation.first_page),
+                    doi=citation.doi,
+                ),
+            )
+        )
+    return citations
+
+
+def _reduce_csd_formula(formula: str) -> tuple[str, set[str]]:
+    """Given a CSD Python API formula string, return a reduced
+    OPTIMADE formula and the set of elements* present.
+
+    * including "D"
+
+    Parameters:
+        formula: The `Entry.formula` string from the CSD Python API.
+
+    Returns:
+        A tuple of the reduced formula and the set of elements present.
+
+    """
     import re
 
     if "," in formula:
@@ -39,6 +88,9 @@ def _reduce_csd_formula(formula: str) -> str:
             species, count = matches.groups()
             formula_dct[species] = int(count) if count else 1
 
+    # Elements list should include "D" so that it can be post-filtered in species lists
+    elements = set(formula_dct.keys())
+
     if "D" in formula_dct:
         formula_dct["H"] = formula_dct.get("H", 0) + formula_dct.pop("D")
 
@@ -53,7 +105,7 @@ def _reduce_csd_formula(formula: str) -> str:
     if not formula_str:
         raise RuntimeError(f"Unable to create formula for {formula}")
 
-    return formula_str
+    return formula_str, elements
 
 
 def from_csd_entry_directly(
@@ -65,16 +117,6 @@ def from_csd_entry_directly(
     """
     asym_unit = entry.crystal.asymmetric_unit_molecule
 
-    elements = {d.atomic_symbol for d in asym_unit.atoms}
-
-    optimade_elements = elements.copy()
-    # Replace deuterium with H
-    if "D" in elements:
-        optimade_elements.remove("D")
-        optimade_elements.add("H")
-
-    now = datetime.datetime.now()
-    now = now.replace(microsecond=0)
     dep_date: datetime.datetime | datetime.date | None = entry.deposition_date
     dep_date = (
         datetime.datetime.fromisoformat(dep_date.isoformat()) if dep_date else None
@@ -83,6 +125,7 @@ def from_csd_entry_directly(
     positions: list | None = None
     lattice_params: list[list[float | None]] = [[None, None, None], [None, None, None]]
     cell_volume: float | None = None
+    packed_mol: ccdc.molecule.Molecule | None = None
     if entry.has_3d_structure:
         packed_mol = entry.crystal.packing()
         try:
@@ -110,39 +153,6 @@ def from_csd_entry_directly(
         ]
         cell_volume = entry.crystal.cell_volume
 
-    def _get_citations(entry) -> list[ReferenceResource]:
-        citations = []
-        for citation in entry.publications:
-            # Use the DOI as OPTIMADE identifier, if available, otherwise generate one
-            # from first author, year and random string (cannot detect duplicates)
-            _id = citation.doi
-            if _id is None:
-                first_author = (
-                    citation.authors.split(", ")[0].split(".")[-1].split(" ")[-1]
-                )
-                _id = f"{first_author}{citation.year}-{''.join(random.choices(string.ascii_lowercase, k=6))}"
-
-            citations.append(
-                ReferenceResource(
-                    id=_id,
-                    type="references",
-                    attributes=ReferenceResourceAttributes(
-                        last_modified=now,
-                        authors=[
-                            {"name": author} for author in citation.authors.split(", ")
-                        ],
-                        year=str(
-                            citation.year
-                        ),  # Potential specification bug that this value should be a string
-                        journal=citation.journal.full_name,
-                        volume=str(citation.volume),
-                        pages=str(citation.first_page),
-                        doi=citation.doi,
-                    ),
-                )
-            )
-        return citations
-
     references: list[ReferenceResource] = _get_citations(entry)
     relationships: dict[str, dict] | None = None
     if references:
@@ -156,15 +166,48 @@ def from_csd_entry_directly(
     if not inchi.success:
         inchi = None
 
+    structure_features = []
     try:
-        reduced_formula = _reduce_csd_formula(entry.formula)
+        reduced_formula, elements = _reduce_csd_formula(entry.formula)
     except ValueError:
         reduced_formula = None
+        elements = {d.atomic_symbol for d in asym_unit.atoms}
+
     except Exception:
         warnings.warn(
             f"Unable to reduce formula for {entry.identifier}: {entry.formula} / {asym_unit.formula}"
         )
         reduced_formula = None
+
+    optimade_elements = elements.copy()
+    # Replace deuterium with H
+    if "D" in elements:
+        optimade_elements.remove("D")
+        optimade_elements.add("H")
+
+    optimade_species = [
+        Species(
+            chemical_symbols=[e if e != "D" else "H"],
+            name=e,
+            concentration=[1.0],
+        )
+        for e in elements
+    ]
+
+    optimade_species_at_sites: list[str] | None = (
+        [atom.atomic_symbol for atom in packed_mol.atoms]
+        if (positions and packed_mol)
+        else None
+    )
+
+    if entry.has_disorder:
+        structure_features += ["disorder"]
+
+    if optimade_species_at_sites:
+        for s in optimade_species:
+            if s.name not in optimade_species_at_sites:
+                structure_features += ["implicit_atoms"]
+                break
 
     resource = StructureResource(
         **{
@@ -176,7 +219,7 @@ def from_csd_entry_directly(
             },
             "attributes": StructureResourceAttributes(
                 immutable_id=entry.identifier,
-                last_modified=now,
+                last_modified=NOW,
                 chemical_formula_anonymous=anonymize_formula(reduced_formula)
                 if reduced_formula
                 else None,
@@ -188,21 +231,10 @@ def from_csd_entry_directly(
                 nelements=len(optimade_elements),
                 nsites=len(positions) if positions else None,
                 # Make sure the "D" is remapped to "H" in the species list, but continue using it in the sites list
-                species=[
-                    Species(
-                        chemical_symbols=[e if e != "D" else "H"],
-                        name=e,
-                        concentration=[1.0],
-                    )
-                    for e in elements
-                ]
-                if positions
-                else None,
+                species=optimade_species if positions else None,
+                species_at_sites=optimade_species_at_sites,
                 cartesian_site_positions=positions,
-                species_at_sites=[atom.atomic_symbol for atom in packed_mol.atoms]
-                if positions
-                else None,
-                structure_features=["disorder"] if entry.has_disorder else [],
+                structure_features=structure_features,
                 # Add custom CSD-specific fields
                 _csd_lattice_parameter_a=lattice_params[0][0],
                 _csd_lattice_parameter_b=lattice_params[0][1],
