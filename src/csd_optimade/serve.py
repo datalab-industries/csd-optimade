@@ -20,6 +20,11 @@ def cli():
         help="Do not insert the JSONL file into the database.",
     )
     parser.add_argument(
+        "--exit-after-insert",
+        action="store_true",
+        help="Exit the API after inserting the JSONL file.",
+    )
+    parser.add_argument(
         "--drop-first",
         action="store_true",
         help="Drop the database before inserting the JSONL file.",
@@ -44,6 +49,9 @@ def cli():
     override_kwargs: dict[str, typing.Any] = {}
     if args.no_insert:
         override_kwargs["insert_from_jsonl"] = None
+
+    if args.exit_after_insert:
+        override_kwargs["exit_after_insert"] = True
 
     # Allow user to specify a real MongoDB
     mongo_uri = args.mongo_uri
