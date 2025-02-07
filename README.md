@@ -113,7 +113,7 @@ Buildx.
 Once configured, you can build the container with
 
 ```shell
-docker build --secret id=env,src=.env -t csd-optimade .
+docker build --secret id=env,src=.env --target csd-optimade-server -t csd-optimade-server .
 ```
 
 This will install the CSD inside the container, run the ingestion pipeline and
@@ -124,11 +124,45 @@ To launch the container (which will decrypt the file and start the OPTIMADE
 API locally):
 
 ```shell
-docker run --env-file .env -p 5000:5000 csd-optimade
+docker run --env-file .env -p 5000:5000 csd-optimade-server
 ```
 
-For development, you may prefer to use the bake definitions in
-`docker-bake.hcl` to build and tag the relevant build stages.
+If using a persistent database, future runs of the API can be controlled with
+the `CSD_OPTIMADE_INSERT` environment variable. If `true`, the configured database will be
+
+
+For development and deployment, you may prefer to use the bake definitions in
+`docker-bake.hcl` to build and tag the relevant build stages:
+
+```shell
+docker buildx bake csd-optimade-server
+docker run --env-file .env -p 5000:5000 ghcr.io/datalab-industries/csd-optimade-server
+```
+
+### Runtime configuration options
+
+As noted above, the `CSD_ACTIVATION_KEY` used to build the container must be provided at runtime.
+
+The API container can also be configured with all the `OPTIMAKE_` prefixed environment variables.
+
+The most important ones are listed here:
+
+- `OPTIMAKE_MONGO_URI`: to use a persistent MongoDB backend, you can provide a `MONGO_URI` via:
+
+  ```shell
+  OPTIMAKE_DATABSE_BACKEND=mongodb
+  OPTIMAKE_MONGO_URI=mongodb://mongodb_server:27017/optimade
+  ```
+
+- `OPTIMAKE_BASE_URL`: to set the base URL of the API (used to generate pagination links), you can provide a `BASE_URL` via:
+
+  ```shell
+  OPTIMAKE_BASE_URL=https://my-csd-deployment.com
+  ```
+
+Finally, if using a persistent database, future runs of the API can be controlled with the `CSD_OPTIMADE_INSERT` environment variable.
+If `true` (default), the configured database will be wiped and rebuilt from the JSONL file directly, and a separate process will run the API.
+If `false`, only the API will be started, with no database rebuild.
 
 ## Contributing and Getting Help
 
