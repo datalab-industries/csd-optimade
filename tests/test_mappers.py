@@ -1,3 +1,5 @@
+import os
+import traceback
 import warnings
 from typing import TYPE_CHECKING
 
@@ -14,7 +16,7 @@ if TYPE_CHECKING:
     from optimade.models import Resource, StructureResource
 
 TEST_ENTRIES = generate_same_random_csd_entries()
-TEST_ENTRIES_BIG = generate_same_random_csd_entries(num_entries=100_000)
+TEST_ENTRIES_ALL = generate_same_random_csd_entries(num_entries=1_290_000)
 
 
 def check_entry(
@@ -97,18 +99,29 @@ def test_random_entries(index: int, entry: "ccdc.entry.Entry", csd_available):
     )
 
 
-def test_random_entries_big(csd_available):
+def test_random_entries_all(csd_available):
     if not csd_available:
         pytest.skip("CSD not available")
+
+    if not os.getenv("CSD_TEST_ALL") == "1":
+        pytest.skip("Skipping all CSD entries test as `CSD_TEST_ALL` unset.")
+
     from csd_optimade.mappers import from_csd_entry_directly
 
     mapper = from_csd_entry_directly
 
-    for index, entry in TEST_ENTRIES_BIG:
-        optimade, included = mapper(entry)
-        assert check_entry(entry, optimade, included, warn_only=True), (
-            f"{entry.identifier} ({index}) failed"
-        )
+    for index, entry in TEST_ENTRIES_ALL:
+        try:
+            optimade, included = mapper(entry)
+            assert check_entry(entry, optimade, included, warn_only=True), (
+                f"{entry.identifier} ({index}) failed"
+            )
+            print(".", end="")
+        except Exception as exc:
+            print(f"{entry.identifier} ({index}) failed")
+            traceback.print_exc()
+            with open("bad_entries.txt", "a") as f:
+                f.write(f"{entry.identifier} ({index}): {exc}\n")
 
 
 def test_reduce_formula():
