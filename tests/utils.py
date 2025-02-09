@@ -69,6 +69,8 @@ def generate_same_random_csd_entries(csd_available=True, num_entries=1000):
 
         from ccdc.io import EntryReader
 
+        from csd_optimade.ingest import BAD_IDENTIFIERS
+
         random.seed(0)
         entry_indices = set()
         max_n: int = int(1.29e6)
@@ -81,6 +83,8 @@ def generate_same_random_csd_entries(csd_available=True, num_entries=1000):
                     try:
                         entry = reader[i]
                         if entry:
+                            if entry in BAD_IDENTIFIERS:
+                                continue
                             yield (i, entry)
                             n_trials += 1
                             entry_indices.add(i)
