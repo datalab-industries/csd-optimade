@@ -629,7 +629,7 @@ server = [
 [[package]]
 name = "optimade-maker"
 version = "0.3.0"
-source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server#6f732e00f859b837f538e861e29d0e85e7e6cb66" }
+source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server#0248484c899140503e770ae7ef5e46b63cffcafa" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
