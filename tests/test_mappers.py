@@ -1,4 +1,5 @@
 import os
+import time
 import traceback
 import warnings
 from typing import TYPE_CHECKING
@@ -112,10 +113,15 @@ def test_random_entries_all(csd_available):
 
     for index, entry in TEST_ENTRIES_ALL:
         try:
+            start = time.monotonic_ns()
+            print(entry.identifier, end=",")
             optimade, included = mapper(entry)
+            elapsed = time.monotonic_ns() - start
             assert check_entry(entry, optimade, included, warn_only=True), (
                 f"{entry.identifier} ({index}) failed"
             )
+            if elapsed > 1e9:
+                print(f"{entry.identifier} ({index}) took {elapsed / 1e9:.1f}s")
             print(".", end="")
         except Exception as exc:
             print(f"{entry.identifier} ({index}) failed")
