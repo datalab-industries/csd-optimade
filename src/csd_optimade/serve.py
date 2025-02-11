@@ -5,7 +5,11 @@ from pathlib import Path
 
 from optimade_maker.serve import OptimakeServer
 
-from csd_optimade.fields import generate_csd_provider_fields
+from csd_optimade.fields import (
+    generate_csd_provider_fields,
+    generate_csd_provider_info,
+    generate_license_link,
+)
 
 
 def cli():
@@ -80,7 +84,7 @@ def cli():
         if args.drop_first and test_client:
             test_client.drop_database(database_name)
 
-    override_kwargs["license"] = "https://www.ccdc.cam.ac.uk/licence-agreement"
+    override_kwargs["license"] = generate_license_link()
 
     optimake_server = OptimakeServer(
         jsonl_path,
@@ -88,12 +92,7 @@ def cli():
         mongo_uri=mongo_uri,
         database_backend="mongodb" if mongo_uri else "mongomock",
         provider_fields=generate_csd_provider_fields(),
-        provider={
-            "prefix": "csd",
-            "name": "Cambridge Structural Database",
-            "description": "A database of crystal structures curated by the Cambridge Crystallographic Data Centre.",
-            "homepage=": "https://www.ccdc.cam.ac.uk",
-        },
+        provider=generate_csd_provider_info(),
         **override_kwargs,
     )
     optimake_server.start_api()

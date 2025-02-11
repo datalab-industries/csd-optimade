@@ -1,3 +1,7 @@
+from optimade import __api_version__
+from optimade.models.baseinfo import BaseInfoAttributes, BaseInfoResource
+
+
 def generate_csd_provider_fields():
     return {
         "structures": [
@@ -101,4 +105,34 @@ def generate_csd_provider_fields():
                 "description": "Free-text remarks about the structure.",
             },
         ]
+    }
+
+
+def generate_csd_provider_info():
+    return {
+        "prefix": "csd",
+        "name": "Cambridge Structural Database",
+        "description": "A database of crystal structures curated by the Cambridge Crystallographic Data Centre.",
+        "homepage=": "https://www.ccdc.cam.ac.uk",
+    }
+
+
+def generate_license_link():
+    return "https://www.ccdc.cam.ac.uk/licence-agreement"
+
+
+def generate_csd_info_endpoint() -> dict[str, BaseInfoResource]:
+    return {
+        "data": BaseInfoResource(
+            attributes=BaseInfoAttributes(
+                api_version=__api_version__,
+                available_api_versions=[],
+                formats=["json"],
+                available_endpoints=["info", "structures", "references"],
+                entry_types_by_format={"json": ["info", "structures", "references"]},
+                is_index=False,
+                license={"href": generate_license_link()},
+                available_licenses=None,
+            )
+        )
     }
