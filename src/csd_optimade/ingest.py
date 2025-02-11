@@ -1,8 +1,17 @@
 from __future__ import annotations
 
+from optimade import __api_version__
+
+from csd_optimade.fields import (
+    generate_csd_info_endpoint,
+    generate_csd_provider_fields,
+    generate_csd_provider_info,
+)
+
 BAD_IDENTIFIERS = {
     "QIJZOB",  # hangs infinitely during mapping
     "VOHZIB",  # no 3D structure
+    "YIGKOP",
 }
 
 import glob
@@ -189,13 +198,38 @@ def cli():
     with open(tmp_jsonl_path) as tmp_jsonl:
         ids_by_type: dict[str, set] = {}
         with open(output_file, "w") as final_jsonl:
-            # Write headers
+            # Write headers and info endpoints
             final_jsonl.write(
-                json.dumps({"x-optimade": {"meta": {"api_version": "1.1.0"}}}) + "\n"
+                json.dumps({"x-optimade": {"meta": {"api_version": __api_version__}}})
+                + "\n"
+            )
+
+            info = generate_csd_info_endpoint()
+            provider = generate_csd_provider_info()
+            final_jsonl.write(
+                json.dumps(
+                    {
+                        "data": info["data"].model_dump(
+                            exclude_unset=True, exclude_none=False
+                        )
+                    }
+                )
+                + "\n"
             )
             final_jsonl.write(
                 _construct_entry_type_info(
-                    "structures", properties=[], provider_prefix=""
+                    "structures",
+                    properties=generate_csd_provider_fields()["structures"],
+                    provider_prefix=provider["prefix"],
+                ).model_dump_json()
+                + "\n"
+            )
+
+            final_jsonl.write(
+                _construct_entry_type_info(
+                    "references",
+                    properties=[],
+                    provider_prefix=provider["prefix"],
                 ).model_dump_json()
                 + "\n"
             )
