@@ -183,10 +183,10 @@ if [ -z "$CSD_ACTIVATION_KEY" ]; then
  exit 1
 fi
 
-if [ "$CSD_OPTIMADE_INSERT" = "1" ] || [ "$CSD_OPTIMADE_INSERT" = "true"]; then
+if [ "$CSD_OPTIMADE_INSERT" = "1" ] || [ "$CSD_OPTIMADE_INSERT" = "true" ]; then
     # Run the API twice: once to wipe and reinsert the data then exit, the second to run the API
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl
-    exec uv run --no-sync csd-serve --port 5001 --exit-after-insert --drop-first /opt/csd-optimade/csd-optimade.jsonl &
+    (gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl &&
+    exec uv run --no-sync csd-serve --port 5001 --exit-after-insert --drop-first /opt/csd-optimade/csd-optimade.jsonl) &
 fi
 
 exec uv run --no-sync csd-serve --no-insert /opt/csd-optimade/csd-optimade.jsonl
