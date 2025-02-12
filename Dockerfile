@@ -71,10 +71,15 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
+# Only changes to the ingest module will trigger a rebuild; rest will be mounted
+COPY ./src/csd_optimade/ingest.py /opt/csd-optimade/src/csd_optimade/ingest.py
+
 # Copy relevant csd-optimade build files only
-COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
-COPY src /opt/csd-optimade/src
 RUN --mount=type=cache,target=/root/.cache/uv \
+    --mount=type=bind,source=src,target=/opt/csd-optimade/src \
+    --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
+    --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
     uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
     # Remove unecessary mandatory deps from csd-python-api
     uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
