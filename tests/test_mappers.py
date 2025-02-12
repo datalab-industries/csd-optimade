@@ -132,10 +132,19 @@ def test_random_entries_all(csd_available):
 
 def test_reduce_formula():
     zzzghe = "C18 H12 Br3 N1"
-    assert _reduce_csd_formula(zzzghe) == "Br3C18H12N"
+    formula, elements = _reduce_csd_formula(zzzghe)
+    assert formula == "Br3C18H12N"
+    assert elements == {"Br", "C", "H", "N"}
+
+    zzzghe = "C18 D6 H6 Br3 N1"
+    formula, elements = _reduce_csd_formula(zzzghe)
+    assert formula == "Br3C18H12N"
+    assert elements == {"Br", "C", "H", "N", "D"}
 
     pivcih01 = "C11 H20 O3"
-    assert _reduce_csd_formula(pivcih01) == "C11H20O3"
+    formula, elements = _reduce_csd_formula(pivcih01)
+    assert formula == "C11H20O3"
+    assert elements == {"C", "H", "O"}
 
     dumjif1 = "C54 H41 As2 O11 P1 Ru3,0.15(C1 H2 Cl2)"
     with pytest.raises(ValueError, match="multi-component"):
