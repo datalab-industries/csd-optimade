@@ -112,10 +112,18 @@ def generate_csd_provider_info():
     return {
         "prefix": "csd",
         "name": "Cambridge Structural Database",
-        "description": "A database of crystal structures curated by the Cambridge Crystallographic Data Centre.",
-        "homepage=": "https://www.ccdc.cam.ac.uk",
+        "description": f"A database of crystal structures curated by the Cambridge Crystallographic Data Centre. Licensing and reuse agreements can be found at {generate_license_link()}.",
+        "homepage": "https://www.ccdc.cam.ac.uk",
     }
 
+
+def generate_implementation_info():
+    return {
+        "name": "CSD OPTIMADE",
+        "source_url": "https://github.com/datalab-industries/csd-optimade",
+        "issue_tracker": "https://github.com/datalab-industries/csd-optimade",
+        "homepage": "https://github.com/datalab-industries/csd-optimade",
+    }
 
 def generate_license_link():
     return "https://www.ccdc.cam.ac.uk/licence-agreement"
