@@ -76,7 +76,7 @@ COPY ./src/csd_optimade/ingest.py /opt/csd-optimade/src/csd_optimade/ingest.py
 
 # Copy relevant csd-optimade build files only
 RUN --mount=type=cache,target=/root/.cache/uv \
-    --mount=type=bind,source=src,target=/opt/csd-optimade/src \
+    --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
