@@ -8,6 +8,7 @@ from optimade_maker.serve import OptimakeServer
 from csd_optimade.fields import (
     generate_csd_provider_fields,
     generate_csd_provider_info,
+    generate_implementation_info,
     generate_license_link,
 )
 
@@ -93,6 +94,7 @@ def cli():
         database_backend="mongodb" if mongo_uri else "mongomock",
         provider_fields=generate_csd_provider_fields(),
         provider=generate_csd_provider_info(),
+        implementation=generate_implementation_info(),
         **override_kwargs,
     )
     optimake_server.start_api()
