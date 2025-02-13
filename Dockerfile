@@ -78,6 +78,7 @@ COPY ./src/csd_optimade/ingest.py /opt/csd-optimade/src/csd_optimade/ingest.py
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=src,target=/opt/csd-optimade/src \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
+    --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
     uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
