@@ -91,6 +91,11 @@ ARG CSD_NUM_STRUCTURES=
 
 # Mount secrets to manually activate the CSD only when needed during ingestion
 RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
+    --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
+    --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
+    --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
+    --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
+    --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
     mkdir -p /root/.config/CCDC && \
     echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
     mkdir -p data && \
