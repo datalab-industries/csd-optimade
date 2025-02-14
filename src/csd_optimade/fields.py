@@ -1,6 +1,8 @@
 from optimade import __api_version__
 from optimade.models.baseinfo import BaseInfoAttributes, BaseInfoResource
 
+from csd_optimade import __version__
+
 
 def generate_csd_provider_fields():
     return {
@@ -120,10 +122,12 @@ def generate_csd_provider_info():
 def generate_implementation_info():
     return {
         "name": "CSD OPTIMADE",
+        "version": __version__,
         "source_url": "https://github.com/datalab-industries/csd-optimade",
         "issue_tracker": "https://github.com/datalab-industries/csd-optimade",
         "homepage": "https://github.com/datalab-industries/csd-optimade",
     }
+
 
 def generate_license_link():
     return "https://www.ccdc.cam.ac.uk/licence-agreement"
