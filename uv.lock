@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = "==3.11.*"
 
 [[package]]
@@ -167,7 +168,7 @@ requires-dist = [
     { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
     { name = "optimade", git = "https://github.com/Materials-Consortia/optimade-python-tools.git" },
-    { name = "optimade-maker", git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server" },
+    { name = "optimade-maker", specifier = "~=0.4" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "psutil", marker = "extra == 'ingest'", specifier = "~=6.1" },
     { name = "pymongo", specifier = ">=4,<5" },
@@ -176,6 +177,7 @@ requires-dist = [
     { name = "ruff", marker = "extra == 'dev'", specifier = "~=0.5" },
     { name = "tqdm", specifier = "~=4.66" },
 ]
+provides-extras = ["dev", "ingest"]
 
 [[package]]
 name = "csd-python-api"
@@ -628,8 +630,8 @@ server = [
 
 [[package]]
 name = "optimade-maker"
-version = "0.3.0"
-source = { git = "https://github.com/materialscloud-org/optimade-maker.git?rev=ml-evs%2Fqol-server#0248484c899140503e770ae7ef5e46b63cffcafa" }
+version = "0.4.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
@@ -638,6 +640,10 @@ dependencies = [
     { name = "pyyaml" },
     { name = "requests" },
     { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/07/71/5dee0bcb1e9bdefc477db05f5bfacd687c4f2ccf791f3455f190476327a8/optimade_maker-0.4.0.tar.gz", hash = "sha256:ac25006e9021b6375e05f7837f0953d07c0298134b6a0b9fd3d9890ddc9ee061", size = 24494 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a9/1a/c5a77714dd23557ae35ffb5018ecb05a0f591bb1838108e9a42a9f1deed6/optimade_maker-0.4.0-py3-none-any.whl", hash = "sha256:fba4c3c8ccb12e95b35a4ea70e7c34567e2d9c23dcc6fce1dab75468e94590b2", size = 23050 },
 ]
 
 [[package]]
