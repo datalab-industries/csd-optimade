@@ -26,6 +26,9 @@ from optimade.models import (
 NOW = datetime.datetime.now()
 NOW = NOW.replace(microsecond=0)
 
+CSD_OPTIMADE_SIDENTIFIER = "csd-optimade-psdi"
+"""Identifier to use when reporting `sid` to CCDC services."""
+
 
 def _get_citations(entry) -> list[ReferenceResource]:
     """Return attached reference resources given the CSD API citation format."""
@@ -215,7 +218,7 @@ def from_csd_entry_directly(
             "type": "structures",
             "relationships": relationships,
             "links": {
-                "self": f"https://www.ccdc.cam.ac.uk/structures/Search?Ccdcid={entry.identifier}"
+                "self": f"https://www.ccdc.cam.ac.uk/services/structures?pid=csd:{entry.identifier}&sid={CSD_OPTIMADE_SIDENTIFIER}"
             },
             "attributes": StructureResourceAttributes(
                 immutable_id=entry.identifier,
