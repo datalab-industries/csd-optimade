@@ -85,7 +85,10 @@ def _reduce_csd_formula(formula: str) -> tuple[str, set[str]]:
         raise ValueError("Cannot reduce non-existent formula")
 
     formula_dct = {}
-    for e in formula.strip("(").strip(")n").split(" "):
+    # Strip leading numbers
+    formula = re.sub(r"^[0-9.]+(.*)$", r"\1", formula)
+
+    for e in formula.strip("(").strip(")n").strip("x(").split(" "):
         matches = re.match(r"([a-zA-Z]+)([0-9]*)", e)
         if matches:
             species, count = matches.groups()
