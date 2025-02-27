@@ -10,8 +10,6 @@ from csd_optimade.fields import (
 
 BAD_IDENTIFIERS = {
     "QIJZOB",  # hangs infinitely during mapping
-    "VOHZIB",  # no 3D structure
-    "YIGKOP",
 }
 
 import glob
