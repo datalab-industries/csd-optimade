@@ -46,7 +46,7 @@ FROM base-packages AS python-setup
 WORKDIR /opt/csd-optimade
 
 # Install uv for Python package management
-COPY --from=ghcr.io/astral-sh/uv:0.5.22 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.6.3 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=manual \

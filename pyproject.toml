@@ -20,8 +20,8 @@ classifiers = [
 ]
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
-    "optimade @ git+https://github.com/Materials-Consortia/optimade-python-tools.git",
-    "optimade-maker @ git+https://github.com/materialscloud-org/optimade-maker.git@ml-evs/qol-server",
+    "optimade ~= 1.2",
+    "optimade-maker ~= 0.4",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
 ]
