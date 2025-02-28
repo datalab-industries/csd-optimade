@@ -34,6 +34,8 @@ RUN apt update && \
 
 FROM base-packages AS csd-data
 
+ARG CSD_INSTALLER_URL=
+
 RUN \
     # Mount and then source any .env secrets that are required to download and activate the CSD
     --mount=type=secret,id=csd-installer-url,env=CSD_INSTALLER_URL \
