@@ -174,14 +174,15 @@ def cli():
                     pbar.set_postfix({"% bad": "???"})
 
     # Combine all results into a single JSONL file, first temporary
-    output_file = f"{run_name}-optimade.jsonl"
+    output_dir = Path("data")
+    output_file = output_dir / f"{run_name}-optimade.jsonl"
     tmp_dir = tempfile.TemporaryDirectory()
-    tmp_jsonl_path = Path(tmp_dir.name) / output_file
+    tmp_jsonl_path = Path(tmp_dir.name) / output_file.name
     print(f"Collecting results into {output_file}")
 
     pattern = f"{run_name}-optimade-*.jsonl"
     input_files = sorted(
-        glob.glob(os.path.join("data", pattern)),
+        glob.glob(os.path.join(output_dir, pattern)),
         key=lambda x: int(x.split("-")[-1].split(".")[0]),
     )
 

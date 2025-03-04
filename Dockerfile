@@ -92,12 +92,15 @@ ARG REINGEST=false
 ARG CSD_NUM_STRUCTURES=
 
 # Mount secrets to manually activate the CSD only when needed during ingestion
+# and give builder a chunk /tmp to write to (both as a data directory, and as its own /tmp)
 RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
+    --mount=type=bind,source=/tmp,target=/opt/csd-optimade/data,rw=true \
+    --mount=type=bind,source=/tmp,target=/tmp,rw=true \
     mkdir -p /root/.config/CCDC && \
     echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
     mkdir -p data && \
@@ -108,8 +111,10 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
       csd-ingest \
       --num-structures ${CSD_NUM_STRUCTURES} && \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
-    gzip -9 /opt/csd-optimade/csd-optimade.jsonl && \
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/csd-optimade.jsonl.gz
+    gzip -9 /opt/csd-optimade/data/csd-optimade.jsonl && \
+    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/data/csd-optimade.jsonl.gz && \
+    cp /opt/csd-optimade/data/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/csd-optimade.jsonl.gz.gpg
+
 
 FROM base-packages AS compress-csd-data
 
