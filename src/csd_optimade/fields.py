@@ -78,18 +78,18 @@ def generate_csd_provider_fields():
             },
             {
                 "name": "_csd_inchi",
-                "type": "string",
-                "description": "CSD InChI string.",
+                "type": "list",
+                "description": "A list of InChI strings for individual components in the structure.",
             },
             {
                 "name": "_csd_inchi_key",
-                "type": "string",
-                "description": "CSD InChIKey.",
+                "type": "list",
+                "description": "A list of InChIKeys for individual components in the structure.",
             },
             {
                 "name": "_csd_smiles",
                 "type": "string",
-                "description": "CSD SMILES string.",
+                "description": "A SMILES string computed for the 3D structure.",
             },
             {
                 "name": "_csd_z_value",
