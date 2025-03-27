@@ -18,7 +18,6 @@ import json
 import logging
 import math
 import os
-import tempfile
 import time
 import warnings
 from functools import partial
@@ -40,7 +39,9 @@ from optimade_maker.convert import _construct_entry_type_info
 
 from csd_optimade.mappers import from_csd_entry_directly
 
-logging.basicConfig()
+LOG = logging.getLogger(__name__)
+LOG.handlers = [logging.StreamHandler()]
+LOG.setLevel(logging.INFO)
 
 
 def from_csd_database(
@@ -88,7 +89,7 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
     if total_count == 0 and bad_count != 0:
         raise RuntimeError("No good entries found in chunk; something went wrong.")
 
-    logging.info("Wrote chunk % to %", chunk_id, chunk_path)
+    LOG.info("Wrote chunk % to %", chunk_id, chunk_path)
 
     return chunk_id, total_count, bad_count
 
@@ -182,9 +183,9 @@ def cli():
     # Combine all results into a single JSONL file, first temporary
     output_dir = Path("data")
     output_file = output_dir / f"{run_name}-optimade.jsonl"
-    tmp_dir = tempfile.TemporaryDirectory()
-    tmp_jsonl_path = Path(tmp_dir.name) / output_file.name
-    logging.info(f"Collecting results into {output_file}")
+    tmp_dir = "/tmp/csd-optimade"
+    tmp_jsonl_path = Path(tmp_dir) / output_file.name
+    LOG.info(f"Collecting results into {output_file}")
 
     pattern = f"{run_name}-optimade-*.jsonl"
     input_files = sorted(
@@ -251,7 +252,7 @@ def cli():
                     ids_by_type[_type].add(json_entry["id"])
                     final_jsonl.write(line_entry)
 
-    tmp_dir.cleanup()
+    Path(tmp_dir).rmdir()
 
     # Final scan to remove duplicates an empty lines
     print(
