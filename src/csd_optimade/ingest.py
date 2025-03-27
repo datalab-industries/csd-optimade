@@ -15,6 +15,7 @@ BAD_IDENTIFIERS = {
 import glob
 import itertools
 import json
+import logging
 import math
 import os
 import tempfile
@@ -38,6 +39,8 @@ if TYPE_CHECKING:
 from optimade_maker.convert import _construct_entry_type_info
 
 from csd_optimade.mappers import from_csd_entry_directly
+
+logging.basicConfig()
 
 
 def from_csd_database(
@@ -69,7 +72,8 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
     bad_count: int = 0
     total_count: int = 0
     str_chunk_id = f"{chunk_id:0{len(str(num_chunks))}d}"
-    with open(f"data/{run_name}-optimade-{str_chunk_id}.jsonl", "w") as f:
+    chunk_path = Path(f"data/{run_name}-optimade-{str_chunk_id}.jsonl")
+    with open(chunk_path, "w") as f:
         try:
             for entry in from_csd_database(ccdc.io.EntryReader("CSD"), range_):
                 total_count += 1
@@ -83,6 +87,8 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
             pass
     if total_count == 0 and bad_count != 0:
         raise RuntimeError("No good entries found in chunk; something went wrong.")
+
+    logging.info("Wrote chunk % to %", chunk_id, chunk_path)
 
     return chunk_id, total_count, bad_count
 
@@ -178,7 +184,7 @@ def cli():
     output_file = output_dir / f"{run_name}-optimade.jsonl"
     tmp_dir = tempfile.TemporaryDirectory()
     tmp_jsonl_path = Path(tmp_dir.name) / output_file.name
-    print(f"Collecting results into {output_file}")
+    logging.info(f"Collecting results into {output_file}")
 
     pattern = f"{run_name}-optimade-*.jsonl"
     input_files = sorted(
