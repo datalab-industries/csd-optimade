@@ -15,9 +15,9 @@ BAD_IDENTIFIERS = {
 import glob
 import itertools
 import json
+import logging
 import math
 import os
-import tempfile
 import time
 import warnings
 from functools import partial
@@ -38,6 +38,10 @@ if TYPE_CHECKING:
 from optimade_maker.convert import _construct_entry_type_info
 
 from csd_optimade.mappers import from_csd_entry_directly
+
+LOG = logging.getLogger(__name__)
+LOG.handlers = [logging.StreamHandler()]
+LOG.setLevel(logging.INFO)
 
 
 def from_csd_database(
@@ -69,7 +73,8 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
     bad_count: int = 0
     total_count: int = 0
     str_chunk_id = f"{chunk_id:0{len(str(num_chunks))}d}"
-    with open(f"data/{run_name}-optimade-{str_chunk_id}.jsonl", "w") as f:
+    chunk_path = Path(f"data/{run_name}-optimade-{str_chunk_id}.jsonl")
+    with open(chunk_path, "w") as f:
         try:
             for entry in from_csd_database(ccdc.io.EntryReader("CSD"), range_):
                 total_count += 1
@@ -83,6 +88,8 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
             pass
     if total_count == 0 and bad_count != 0:
         raise RuntimeError("No good entries found in chunk; something went wrong.")
+
+    LOG.info("Wrote chunk % to %", chunk_id, chunk_path)
 
     return chunk_id, total_count, bad_count
 
@@ -176,9 +183,10 @@ def cli():
     # Combine all results into a single JSONL file, first temporary
     output_dir = Path("data")
     output_file = output_dir / f"{run_name}-optimade.jsonl"
-    tmp_dir = tempfile.TemporaryDirectory()
-    tmp_jsonl_path = Path(tmp_dir.name) / output_file.name
-    print(f"Collecting results into {output_file}")
+    tmp_dir = Path("/tmp/csd-optimade")
+    tmp_dir.mkdir(exist_ok=True, parents=True)
+    tmp_jsonl_path = tmp_dir / output_file.name
+    LOG.info(f"Collecting results into {output_file}")
 
     pattern = f"{run_name}-optimade-*.jsonl"
     input_files = sorted(
@@ -245,7 +253,7 @@ def cli():
                     ids_by_type[_type].add(json_entry["id"])
                     final_jsonl.write(line_entry)
 
-    tmp_dir.cleanup()
+    tmp_dir.rmdir()
 
     # Final scan to remove duplicates an empty lines
     print(
