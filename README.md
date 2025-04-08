@@ -17,16 +17,6 @@ OPTIMADE format; the
 [`optimade-python-tools`](https://github.com/Materials-Consortia/optimade-python-tools/)
 are then used to launch a local OPTIMADE API.
 
-## Roadmap
-
-Estimated date for completion: March 2025.
-
-- [x] Set up ingestion pipeline for CSD database to allow querying via local OPTIMADE API.
-- [ ] Collaborate on and collate cheminformatics property definitions as part of wider [OPTIMADE cheminformatics initiative](https://github.com/Materials-Consortia/namespace-cheminformatics/).
-- [ ] Get feedback on pipeline for correctness/robustness, and incrementally deal with problematic cases.
-- [ ] Deploy ingestion service behind PSDI authentication gateway as a data service that can be used by e.g., cross-search platform, that updates on each CSD data release.
-
-
 ## Installation
 
 After cloning this repository and using some appropriate method of creating a virtual environment (current recommendation is [`uv`](https://github.com/astral-sh/uv)), this package can be installed with
