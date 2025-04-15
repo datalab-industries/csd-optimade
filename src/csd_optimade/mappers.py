@@ -168,9 +168,7 @@ def from_csd_entry_directly(
             }
         }
 
-    inchi = entry.crystal.generate_inchi()
-    if not inchi.success:
-        inchi = None
+    inchis = entry.component_inchis
 
     structure_features = []
     try:
@@ -252,8 +250,8 @@ def from_csd_entry_directly(
                 _csd_crystal_system=entry.crystal.crystal_system,
                 _csd_space_group_symbol_hermann_mauginn=entry.crystal.spacegroup_symbol,  # Need to double-check if this matches OPTIMADE 1.2 definition
                 _csd_chemical_name=entry.chemical_name,
-                _csd_inchi=inchi.inchi if inchi else None,
-                _csd_inchi_key=inchi.key if inchi else None,
+                _csd_inchi=[inchi.inchi for inchi in inchis] if inchis else None,
+                _csd_inchi_key=[inchi.key for inchi in inchis] if inchis else None,
                 _csd_smiles=asym_unit.smiles,
                 _csd_z_value=entry.crystal.z_value,
                 _csd_z_prime=entry.crystal.z_prime,
