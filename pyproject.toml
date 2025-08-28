@@ -21,7 +21,7 @@ classifiers = [
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
     "optimade ~= 1.2",
-    "optimade-maker ~= 0.4",
+    "optimade-maker ~= 0.6",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
 ]
