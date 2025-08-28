@@ -21,7 +21,6 @@ classifiers = [
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
     "optimade ~= 1.2",
-    "optimade-maker ~= 0.4",
     "optimade @ git+https://github.com/datalab-industries/optimade-python-tools.git@ml-evs/smarts-prototyping",
     "optimade-maker ~= 0.6",
     "tqdm ~= 4.66",
