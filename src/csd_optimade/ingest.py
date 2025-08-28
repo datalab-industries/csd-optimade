@@ -237,12 +237,14 @@ def cli():
                 if not line_entry.strip():
                     continue
                 json_entry = json.loads(line_entry)
-                if _type := json_entry.get("type"):
+                if (_type := json_entry.get("type")) in ("structures", "references"):
                     if _type not in ids_by_type:
                         ids_by_type[_type] = set()
                     if _id := json_entry.get("id") in ids_by_type[_type]:
                         continue
                     ids_by_type[_type].add(json_entry["id"])
+                    final_jsonl.write(line_entry)
+                else:
                     final_jsonl.write(line_entry)
 
     tmp_dir.cleanup()

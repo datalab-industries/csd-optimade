@@ -65,3 +65,18 @@ target "csd-optimade-server" {
   cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}:cache,mode=max"]
   secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
 }
+
+target "csd-optimade-server-with-csd-sidecar" {
+  inherits = ["docker-metadata-action"]
+  context = "."
+  dockerfile = "Dockerfile"
+  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES}
+  target = "csd-optimade-server-with-csd-sidecar"
+  tags = ["${IMAGE_BASE}:${VERSION}"]
+  cache-from = [
+    "type=registry,ref=${IMAGE_BASE}:${VERSION}",
+    "type=registry,ref=${IMAGE_BASE}:cache",
+  ]
+  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}:cache,mode=max"]
+  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
+}
