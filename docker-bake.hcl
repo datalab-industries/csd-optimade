@@ -33,22 +33,7 @@ variable "CSD_INSTALLER_URL" {
 target "docker-metadata-action" {}
 
 group "default" {
-  targets = ["csd-ingester-test", "csd-optimade-server"]
-}
-
-target "csd-ingester-test" {
-  inherits = ["docker-metadata-action"]
-  context = "."
-  dockerfile = "Dockerfile"
-  target = "csd-ingester-test"
-  cache-from = [
-    "type=registry,ref=${IMAGE_BASE}-test:${VERSION}",
-    "type=registry,ref=${IMAGE_BASE}-test:cache",
-    "type=gha",
-  ]
-  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
-  tags = ["${IMAGE_BASE}-test:${VERSION}"]
-  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
+  targets = ["csd-optimade-server"]
 }
 
 target "csd-optimade-server" {
