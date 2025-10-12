@@ -1,5 +1,5 @@
 variable "CI" {
-  // Set to true if running in a CI environment; this affects how secrets are mounted
+  // Set to true if running in a CI environment; this affects how caching is handled
   default = false
 }
 
@@ -11,6 +11,11 @@ variable "IMAGE_BASE" {
 variable "VERSION" {
   // Version tag to use for the images
   default = "latest"
+}
+
+variable "CSD_REINGEST" {
+  // Whether to reingest the CSD data even if it already exists in the image
+  default = "false"
 }
 
 variable "CSD_NUM_STRUCTURES" {
@@ -51,11 +56,26 @@ target "csd-ingester-test" {
   secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
 }
 
+target "csd-optimade-dev" {
+  inherits = ["docker-metadata-action"]
+  context = "."
+  dockerfile = "Dockerfile"
+  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES, REINGEST = CSD_REINGEST}
+  target = "csd-optimade-server"
+  tags = ["${IMAGE_BASE}-dev:${VERSION}"]
+  cache-from = [
+    "type=registry,ref=${IMAGE_BASE}:${VERSION}",
+    "type=registry,ref=${IMAGE_BASE}:cache",
+  ]
+  cache-to = []
+  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
+}
+
 target "csd-optimade-server" {
   inherits = ["docker-metadata-action"]
   context = "."
   dockerfile = "Dockerfile"
-  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES}
+  args = {CSD_NUM_STRUCTURES = CSD_NUM_STRUCTURES, REINGEST = CSD_REINGEST}
   target = "csd-optimade-server"
   tags = ["${IMAGE_BASE}:${VERSION}"]
   cache-from = [
