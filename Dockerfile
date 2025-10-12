@@ -208,10 +208,6 @@ fi
 
 if [ "$OPTIMAKE_DATABASE_BACKEND" = "mongomock" ]; then
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl
-    echo "File size"
-    du -sh /opt/csd-optimade/optimade.jsonl
-    echo "Number of lines"
-    wc -l /opt/csd-optimade/optimade.jsonl
     exec uv run --no-sync csd-serve --port 5001 /opt/csd-optimade/optimade.jsonl
 else
     # Run CLI with 'fake' file
