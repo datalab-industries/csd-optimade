@@ -99,8 +99,7 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
-    --mount=type=bind,source=/tmp,target=/opt/csd-optimade/data,rw=true \
-    --mount=type=bind,source=/tmp,target=/tmp,rw=true \
+    --mount=type=tmpfs,target=/tmp,rw=true \
     mkdir -p /root/.config/CCDC && \
     echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
     mkdir -p data && \
@@ -203,13 +202,22 @@ fi
 
 if [ "$CSD_OPTIMADE_INSERT" = "1" ] || [ "$CSD_OPTIMADE_INSERT" = "true" ]; then
     # Run the API twice: once to wipe and reinsert the data then exit, the second to run the API
-    (gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/csd-optimade.jsonl;
-    exec uv run --no-sync csd-serve --port 5001 --exit-after-insert --drop-first /opt/csd-optimade/csd-optimade.jsonl) &
+    (gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl;
+    exec uv run --no-sync csd-serve --port 5001 --exit-after-insert --drop-first /opt/csd-optimade/optimade.jsonl) &
 fi
 
-# Run CLI with 'fake' file
-touch /tmp/csd-optimade.jsonl
-exec uv run --no-sync csd-serve --no-insert /tmp/csd-optimade.jsonl
+if [ "$OPTIMAKE_DATABASE_BACKEND" = "mongomock" ]; then
+    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl
+    echo "File size"
+    du -sh /opt/csd-optimade/optimade.jsonl
+    echo "Number of lines"
+    wc -l /opt/csd-optimade/optimade.jsonl
+    exec uv run --no-sync csd-serve --port 5001 /opt/csd-optimade/optimade.jsonl
+else
+    # Run CLI with 'fake' file
+    touch /tmp/optimade.jsonl
+    exec uv run --no-sync csd-serve --no-insert /tmp/optimade.jsonl
+fi
 
 EOF
 
