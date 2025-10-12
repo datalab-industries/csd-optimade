@@ -183,7 +183,7 @@ def cli():
     # Combine all results into a single JSONL file, first temporary
     output_dir = Path("data")
     output_file = output_dir / f"{run_name}-optimade.jsonl"
-    tmp_dir = Path("/tmp/csd-optimade")
+    tmp_dir = Path(f"/tmp/csd-optimade/{run_name}")
     tmp_dir.mkdir(exist_ok=True, parents=True)
     tmp_jsonl_path = tmp_dir / output_file.name
     LOG.info(f"Collecting results into {output_file}")
@@ -253,7 +253,12 @@ def cli():
                     ids_by_type[_type].add(json_entry["id"])
                     final_jsonl.write(line_entry)
 
-    tmp_dir.rmdir()
+    # Remove the temporary directory
+    try:
+        tmp_jsonl_path.unlink()
+        tmp_dir.rmdir()
+    except OSError:
+        raise OSError(f"Dir entries: {os.listdir(tmp_dir)}")
 
     # Final scan to remove duplicates an empty lines
     print(
