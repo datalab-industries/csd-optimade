@@ -168,7 +168,7 @@ requires-dist = [
     { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
     { name = "optimade", specifier = "~=1.2" },
-    { name = "optimade-maker", specifier = "~=0.6" },
+    { name = "optimade-maker", specifier = "~=0.4,<0.5" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "psutil", marker = "extra == 'ingest'", specifier = "~=6.1" },
     { name = "pymongo", specifier = ">=4,<5" },
@@ -631,21 +631,20 @@ server = [
 
 [[package]]
 name = "optimade-maker"
-version = "0.6.1"
+version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
     { name = "optimade", extra = ["server"] },
     { name = "pydantic" },
-    { name = "pymongo" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f8/b4/0706e8af69cafe7275b943d45942b678597daa8bfa003b3034e5f1adc530/optimade_maker-0.6.1.tar.gz", hash = "sha256:5d6cb463b0b05df17fa593bc9a84f5cf4aa7a83f7cd8bc6b82fa79b1e8e22953", size = 1859069, upload-time = "2025-08-22T16:09:21.93Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/3c/00ef667f8ac60fce269b3202c2f9fde39bcdbff1bd2cfde047a069b99075/optimade_maker-0.4.1.tar.gz", hash = "sha256:3d16487278fe6b361bfa124524877f81435c3c6fdb16a7653cafc3e6a68085c3", size = 138133, upload-time = "2025-02-28T13:35:39.196Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/83/78/970b0403f8b8c782ccba06dc8b3ae3776d76c28fe18e90453a53d1be63cb/optimade_maker-0.6.1-py3-none-any.whl", hash = "sha256:3df94eda353e36bbf505049605c7fd5f5b0279c446f3a7a6fdf95d614633f265", size = 26454, upload-time = "2025-08-22T16:09:20.704Z" },
+    { url = "https://files.pythonhosted.org/packages/df/0b/781a0157e90f3e051264dc747bbf10e8359176ebfb67cac52c2da43a38eb/optimade_maker-0.4.1-py3-none-any.whl", hash = "sha256:ea1532a5a5b984f987aa2c4071eec68ca48adda43255d60129f5ae9ac7dfd976", size = 23061, upload-time = "2025-02-28T13:35:34.79Z" },
 ]
 
 [[package]]
