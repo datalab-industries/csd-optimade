@@ -13,6 +13,7 @@ BAD_IDENTIFIERS = {
 }
 
 import glob
+import gzip
 import itertools
 import json
 import logging
@@ -80,6 +81,7 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
                 total_count += 1
                 if isinstance(entry, Exception):
                     bad_count += 1
+                    LOG.warning("Skipping bad entry: %s", entry)
                     continue
                 else:
                     f.write(entry + "\n")
@@ -89,7 +91,14 @@ def handle_chunk(args, run_name: str = "test", num_chunks: int | None = None):
     if total_count == 0 and bad_count != 0:
         raise RuntimeError("No good entries found in chunk; something went wrong.")
 
-    LOG.info("Wrote chunk % to %", chunk_id, chunk_path)
+    # Gzip the chunked file
+    with open(chunk_path, "rb") as f_in:
+        with gzip.open(f"{chunk_path}.gz", "wb") as f_out:
+            f_out.writelines(f_in)
+
+    chunk_path.unlink()
+
+    LOG.info(f"Wrote chunk {chunk_id} to {chunk_path}")
 
     return chunk_id, total_count, bad_count
 
@@ -142,6 +151,9 @@ def cli():
         # Assuming approximately 3 GB for chunk_size 10_000 and a minimum for 500 MB per process to load the DB
         chunk_size = int((available_memory - base_memory_gb) / memory_per_item_gb)
 
+    if args.num_structures > 1_300_000:
+        args.num_structures = 1_300_000
+
     estimated_peak_memory_usage = base_memory_gb + memory_per_item_gb * chunk_size
     if estimated_peak_memory_usage > available_memory:
         warnings.warn(
@@ -186,19 +198,19 @@ def cli():
     tmp_dir = Path(f"/tmp/csd-optimade/{run_name}")
     tmp_dir.mkdir(exist_ok=True, parents=True)
     tmp_jsonl_path = tmp_dir / output_file.name
-    LOG.info(f"Collecting results into {output_file}")
 
-    pattern = f"{run_name}-optimade-*.jsonl"
+    pattern = f"{run_name}-optimade-*.jsonl.gz"
     input_files = sorted(
         glob.glob(os.path.join(output_dir, pattern)),
         key=lambda x: int(x.split("-")[-1].split(".")[0]),
     )
 
     with open(tmp_jsonl_path, "w") as tmp_jsonl:
+        # Decompress and combine all files into a single temporary file that needs to be deduplicated
         for filename in input_files:
             file = Path(filename)
-            with open(file) as infile:
-                tmp_jsonl.write(infile.read())
+            with gzip.open(file, "rb") as infile:
+                tmp_jsonl.write(infile.read().decode("utf-8"))
             tmp_jsonl.write("\n")
             file.unlink()
 
