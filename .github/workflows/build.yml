@@ -58,6 +58,7 @@ jobs:
         source: "."
         targets: "csd-optimade-server"
         push: true
+        pull: true
         load: true
         set: |
           *.output=type=docker,compression=zstd
