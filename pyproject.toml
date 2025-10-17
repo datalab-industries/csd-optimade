@@ -20,8 +20,8 @@ classifiers = [
 ]
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
-    "optimade ~= 1.2",
-    "optimade-maker ~= 0.4, < 0.5",
+    "optimade ~= 1.3",
+    "optimade-maker @ git+https://github.com/datalab-industries/optimade-maker@ml-evs/bump-optimade",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
 ]
