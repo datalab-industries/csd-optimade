@@ -172,6 +172,26 @@ def cli():
 
     ranges = (range(i * chunk_size, (i + 1) * chunk_size) for i in range(num_chunks))
 
+    # Prepare info to prevent errors after multiprocessing
+    info = generate_csd_info_endpoint()
+    provider = generate_csd_provider_info()
+
+    info = json.dumps(
+        {"data": info["data"].model_dump(exclude_unset=True, exclude_none=False)}
+    )
+
+    entry_info_structures = _construct_entry_type_info(
+        "structures",
+        properties=generate_csd_provider_fields()["structures"],
+        provider_prefix=provider["prefix"],
+    ).model_dump_json()
+
+    entry_info_references = _construct_entry_type_info(
+        "references",
+        properties=[],
+        provider_prefix=provider["prefix"],
+    ).model_dump_json()
+
     total_bad = 0
     total = 0
     with Pool(pool_size) as pool:
@@ -222,36 +242,9 @@ def cli():
                 json.dumps({"x-optimade": {"meta": {"api_version": __api_version__}}})
                 + "\n"
             )
-
-            info = generate_csd_info_endpoint()
-            provider = generate_csd_provider_info()
-            final_jsonl.write(
-                json.dumps(
-                    {
-                        "data": info["data"].model_dump(
-                            exclude_unset=True, exclude_none=False
-                        )
-                    }
-                )
-                + "\n"
-            )
-            final_jsonl.write(
-                _construct_entry_type_info(
-                    "structures",
-                    properties=generate_csd_provider_fields()["structures"],
-                    provider_prefix=provider["prefix"],
-                ).model_dump_json()
-                + "\n"
-            )
-
-            final_jsonl.write(
-                _construct_entry_type_info(
-                    "references",
-                    properties=[],
-                    provider_prefix=provider["prefix"],
-                ).model_dump_json()
-                + "\n"
-            )
+            final_jsonl.write(info + "\n")
+            final_jsonl.write(entry_info_structures + "\n")
+            final_jsonl.write(entry_info_references + "\n")
 
             for line_entry in tmp_jsonl:
                 if not line_entry.strip():
