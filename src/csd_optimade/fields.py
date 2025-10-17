@@ -1,4 +1,5 @@
 from optimade import __api_version__
+from optimade import __version__ as __tools_version__
 from optimade.models.baseinfo import BaseInfoAttributes, BaseInfoResource
 
 from csd_optimade import __version__
@@ -121,7 +122,7 @@ def generate_csd_provider_info():
 
 def generate_implementation_info():
     return {
-        "name": "CSD OPTIMADE",
+        "name": f"CSD OPTIMADE (based on optimade-python-tools {__tools_version__})",
         "version": __version__,
         "source_url": "https://github.com/datalab-industries/csd-optimade",
         "issue_tracker": "https://github.com/datalab-industries/csd-optimade",
