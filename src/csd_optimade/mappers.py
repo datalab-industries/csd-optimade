@@ -251,7 +251,7 @@ def from_csd_entry_directly(
                 cartesian_site_positions=positions,
                 structure_features=structure_features,
                 space_group_int_number=space_group_int_number,
-                space_group_symbol_hermann_mauginn=space_group_symbol,
+                space_group_symbol_hermann_maugin=space_group_symbol,
                 # Add custom CSD-specific fields
                 _csd_lattice_parameter_a=lattice_params[0][0],
                 _csd_lattice_parameter_b=lattice_params[0][1],
