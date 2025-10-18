@@ -176,7 +176,7 @@ def cli():
     info = generate_csd_info_endpoint()
     provider = generate_csd_provider_info()
 
-    info = json.dumps(
+    info_string = json.dumps(
         {"data": info["data"].model_dump(exclude_unset=True, exclude_none=False)}
     )
 
@@ -242,7 +242,7 @@ def cli():
                 json.dumps({"x-optimade": {"meta": {"api_version": __api_version__}}})
                 + "\n"
             )
-            final_jsonl.write(info + "\n")
+            final_jsonl.write(info_string + "\n")
             final_jsonl.write(entry_info_structures + "\n")
             final_jsonl.write(entry_info_references + "\n")
 
