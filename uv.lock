@@ -631,8 +631,8 @@ server = [
 
 [[package]]
 name = "optimade-maker"
-version = "0.6.1.post3+gfbec1a5"
-source = { git = "https://github.com/datalab-industries/optimade-maker?rev=ml-evs%2Fbump-optimade#fbec1a51a671215098af737304d55909f50fceb5" }
+version = "0.6.1.post3+g4c79069"
+source = { git = "https://github.com/datalab-industries/optimade-maker?rev=ml-evs%2Fbump-optimade#4c79069b8a7d359a4b8085624c9e9a8dd655593d" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },

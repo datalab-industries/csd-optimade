@@ -89,7 +89,7 @@ def cli():
 
     optimake_server = OptimakeServer(
         jsonl_path,
-        host="localhost",
+        host="0.0.0.0",
         port=args.port,
         mongo_uri=mongo_uri,
         database_backend="mongodb" if mongo_uri else "mongomock",
