@@ -1,7 +1,6 @@
 data/
 Dockerfile
 **/__pycache__/
-**/.git
 **/*.jsonl
 **/.env
 **/.venv
