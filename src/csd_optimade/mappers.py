@@ -203,7 +203,7 @@ def from_csd_entry_directly(
         if (positions and packed_mol)
         else None
     )
-   
+
     # From CSD docs:
     # > Non standard spacegroup numbers, those above 230, will be returned with setting number 0. Unrecognised spacegroups will raise a RuntimeError.
     try:
