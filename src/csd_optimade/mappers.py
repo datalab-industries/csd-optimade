@@ -210,7 +210,7 @@ def from_csd_entry_directly(
         space_group_int_number = entry.crystal.spacegroup_number_and_setting[0]
     except RuntimeError:
         space_group_int_number = None
-    if space_group_int_number > 230:
+    if space_group_int_number and space_group_int_number > 230:
         space_group_int_number = None
 
     space_group_symbol = entry.crystal.spacegroup_symbol
