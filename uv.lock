@@ -168,7 +168,7 @@ requires-dist = [
     { name = "csd-python-api", marker = "extra == 'ingest'", specifier = ">=3,<4" },
     { name = "mypy", marker = "extra == 'dev'", specifier = "~=1.0" },
     { name = "optimade", specifier = "~=1.3" },
-    { name = "optimade-maker", git = "https://github.com/datalab-industries/optimade-maker?rev=ml-evs%2Fbump-optimade" },
+    { name = "optimade-maker", specifier = "~=0.5,<0.6" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = "~=3.0" },
     { name = "psutil", marker = "extra == 'ingest'", specifier = "~=6.1" },
     { name = "pymongo", specifier = ">=4,<5" },
@@ -631,17 +631,20 @@ server = [
 
 [[package]]
 name = "optimade-maker"
-version = "0.6.1.post3+g4c79069"
-source = { git = "https://github.com/datalab-industries/optimade-maker?rev=ml-evs%2Fbump-optimade#4c79069b8a7d359a4b8085624c9e9a8dd655593d" }
+version = "0.5.0"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
     { name = "numpy" },
     { name = "optimade", extra = ["server"] },
     { name = "pydantic" },
-    { name = "pymongo" },
     { name = "pyyaml" },
     { name = "requests" },
     { name = "tqdm" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/44/7b/58f363ab67cb2e385c1272d3f328d833f25777eeb7e0cd2fc7b037578014/optimade_maker-0.5.0.tar.gz", hash = "sha256:60f0c9477ca5a3fb46e50d6b6d49f2eecbf215170a713f62ecd1ceb75d0d594d", size = 1856716, upload-time = "2025-06-29T16:42:18.816Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ba/f0/0118a25145b347e415ccc2fe9356d0c35aded2601b4a507b850c77c3dc9c/optimade_maker-0.5.0-py3-none-any.whl", hash = "sha256:1c11a722de5e87e8ef2eb8bddd74ef46f136b7d9f740f38d94cd810a120977f7", size = 27327, upload-time = "2025-06-29T16:42:17.659Z" },
 ]
 
 [[package]]
