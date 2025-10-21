@@ -631,7 +631,7 @@ server = [
 
 [[package]]
 name = "optimade-maker"
-version = "0.5.0"
+version = "0.5.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
@@ -642,9 +642,9 @@ dependencies = [
     { name = "requests" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/44/7b/58f363ab67cb2e385c1272d3f328d833f25777eeb7e0cd2fc7b037578014/optimade_maker-0.5.0.tar.gz", hash = "sha256:60f0c9477ca5a3fb46e50d6b6d49f2eecbf215170a713f62ecd1ceb75d0d594d", size = 1856716, upload-time = "2025-06-29T16:42:18.816Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/8a/f17e36a1b7020947a611f47b1db23acb4672a6d04dbd26f75fd99f49c8f6/optimade_maker-0.5.2.tar.gz", hash = "sha256:82bbda983dab261e5219f93d6a0a453df964f51e828e6c93a099850c31f368e4", size = 1856835, upload-time = "2025-10-21T20:21:00.845Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ba/f0/0118a25145b347e415ccc2fe9356d0c35aded2601b4a507b850c77c3dc9c/optimade_maker-0.5.0-py3-none-any.whl", hash = "sha256:1c11a722de5e87e8ef2eb8bddd74ef46f136b7d9f740f38d94cd810a120977f7", size = 27327, upload-time = "2025-06-29T16:42:17.659Z" },
+    { url = "https://files.pythonhosted.org/packages/3e/6c/99559163330099db61e70957b4e4ada6911065bbe9a94f8e1fbae572b6f9/optimade_maker-0.5.2-py3-none-any.whl", hash = "sha256:2815b268c0c320c0b1ab4b762fe5f16235cf2f9be4ddb5a6867c3192a7b8fe37", size = 28044, upload-time = "2025-10-21T20:20:59.577Z" },
 ]
 
 [[package]]
