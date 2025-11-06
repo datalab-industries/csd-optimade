@@ -66,17 +66,19 @@ FROM python-setup AS csd-ingester
 WORKDIR /opt/csd-optimade
 
 # Install and cache CSD Python API and its dependencies
-RUN uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
 
 # Copy the CSD data into the ingestion image
 COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
+
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
 # Only changes to the ingest module will trigger a rebuild; rest will be mounted
 COPY ./src/csd_optimade/ingest.py /opt/csd-optimade/src/csd_optimade/ingest.py
 
 # Copy relevant csd-optimade build files only
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-prod \
     --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
@@ -136,7 +138,7 @@ ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 # Copy relevant csd-optimade build files only
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test \
     uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
     # Remove unecessary mandatory deps from csd-python-api
     uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12 && \
@@ -184,7 +186,7 @@ COPY --from=csd-ingester /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-op
 # Copy relevant csd-optimade build files only, this time do not install any extras
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-server \
     --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
     uv sync --locked --no-dev && \
     # Remove unecessary mandatory deps from csd-python-api
