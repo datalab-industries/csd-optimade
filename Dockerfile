@@ -66,8 +66,7 @@ FROM python-setup AS csd-ingester
 WORKDIR /opt/csd-optimade
 
 # Install and cache CSD Python API and its dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
+RUN uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
 
 # Copy the CSD data into the ingestion image
 COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
