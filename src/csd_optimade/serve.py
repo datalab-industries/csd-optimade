@@ -1,7 +1,7 @@
 import argparse
+import os
 import tempfile
 import typing
-import os
 from pathlib import Path
 
 from optimade_maker.serve import OptimakeServer
