@@ -43,6 +43,14 @@ RUN \
     wget -O /opt/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/csd-installer.sh; \
     /opt/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
 
+FROM base-packages AS compress-csd-data
+
+COPY --from=csd-data /opt/ccdc/ccdc-data/csd /tmp/csd
+RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
+    tar -czf /opt/csd.tar.gz -C /tmp csd && \
+    rm -rf /tmp/csd && \
+    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz
+
 FROM base-packages AS python-setup
 
 WORKDIR /opt/csd-optimade
@@ -55,7 +63,6 @@ ENV UV_LINK_MODE=copy \
     UV_PYTHON=python3.11 \
     UV_NO_SYNC=1
 
-
 # Set up Python 3.11 environment
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv python install 3.11 && \
@@ -65,12 +72,12 @@ FROM python-setup AS csd-ingester
 
 WORKDIR /opt/csd-optimade
 
-# Install and cache CSD Python API and its dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
-
 # Copy the CSD data into the ingestion image
-COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
+COPY --from=compress-csd-data /opt/csd.tar.gz.gpg /opt/csd.tar.gz.gpg
+
+# Install and cache CSD Python API and its dependencies
+RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-csd \
+    uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
 
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
@@ -101,6 +108,9 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
+    mkdir -p /opt/ccdc/ccdc-data && \
+    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz  &&\
+    tar -xzf /opt/csd.tar.gz -C /opt/ccdc/ccdc-data && \
     mkdir -p /root/.config/CCDC && \
     echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
     mkdir -p data && \
@@ -111,18 +121,11 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
       csd-ingest \
       --num-structures ${CSD_NUM_STRUCTURES} && \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
+    rm -rf /opt/ccdc /opt/csd.tar.gz && \
     gzip -9 /opt/csd-optimade/data/csd-optimade.jsonl && \
     gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/data/csd-optimade.jsonl.gz && \
     cp /opt/csd-optimade/data/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/csd-optimade.jsonl.gz.gpg
 
-
-FROM base-packages AS compress-csd-data
-
-COPY --from=csd-data /opt/ccdc/ccdc-data/csd /tmp/csd
-RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
-    tar -czf /opt/csd.tar.gz -C /tmp csd && \
-    rm -rf /tmp/csd && \
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz
 
 FROM python-setup AS csd-ingester-test
 LABEL org.opencontainers.image.source="https://github.com/datalab-industries/csd-optimade"
