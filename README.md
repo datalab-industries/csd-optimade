@@ -140,7 +140,7 @@ The most important ones are listed here:
 - `OPTIMAKE_MONGO_URI`: to use a persistent MongoDB backend, you can provide a `MONGO_URI` via:
 
   ```shell
-  OPTIMAKE_DATABSE_BACKEND=mongodb
+  OPTIMAKE_DATABASE_BACKEND=mongodb
   OPTIMAKE_MONGO_URI=mongodb://mongodb_server:27017/optimade
   ```
 
@@ -153,6 +153,13 @@ The most important ones are listed here:
 Finally, if using a persistent database, future runs of the API can be controlled with the `CSD_OPTIMADE_INSERT` environment variable.
 If `true` (default), the configured database will be wiped and rebuilt from the JSONL file directly, and a separate process will run the API.
 If `false`, only the API will be started, with no database rebuild.
+
+> [!NOTE]
+> When used in production with the full CSD database, performance will be
+> significantly improved by creating the appropriate indexes for queryable 
+> fields in MongoDB. This may be partially handled by `optimade-maker` and
+> `optimade-python-tools`, but you may wish to also tune index performance
+> for your particular use case.
 
 ## Contributing and Getting Help
 
