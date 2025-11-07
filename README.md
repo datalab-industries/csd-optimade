@@ -156,7 +156,7 @@ If `false`, only the API will be started, with no database rebuild.
 
 > [!NOTE]
 > When used in production with the full CSD database, performance will be
-> significantly improved by creating the appropriate indexes for queryable 
+> significantly improved by creating the appropriate indexes for queryable
 > fields in MongoDB. This may be partially handled by `optimade-maker` and
 > `optimade-python-tools`, but you may wish to also tune index performance
 > for your particular use case.
