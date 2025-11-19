@@ -252,7 +252,7 @@ def from_csd_entry_directly(
                 _csd_chemical_name=entry.chemical_name,
                 _csd_inchi=[inchi.inchi for inchi in inchis] if inchis else None,
                 _csd_inchi_key=[inchi.key for inchi in inchis] if inchis else None,
-                _csd_smiles=asym_unit.smiles,
+                _csd_smiles=entry.crystal.molecule.smiles,
                 _csd_z_value=entry.crystal.z_value,
                 _csd_z_prime=entry.crystal.z_prime,
                 _csd_ccdc_number=entry.ccdc_number,
