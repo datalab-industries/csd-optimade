@@ -61,7 +61,8 @@ ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=manual \
     UV_PYTHON=python3.11 \
-    UV_NO_SYNC=1
+    UV_NO_SYNC=1 \
+    UV_NO_CACHE=1
 
 # Set up Python 3.11 environment
 RUN --mount=type=cache,target=/root/.cache/uv \
@@ -75,26 +76,19 @@ WORKDIR /opt/csd-optimade
 # Copy the CSD data into the ingestion image
 COPY --from=compress-csd-data /opt/csd.tar.gz.gpg /opt/csd.tar.gz.gpg
 
-# Install and cache CSD Python API and its dependencies
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-csd \
-    uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
-
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
 # Only changes to the ingest module will trigger a rebuild; rest will be mounted
 COPY ./src/csd_optimade/ingest.py /opt/csd-optimade/src/csd_optimade/ingest.py
 
 # Copy relevant csd-optimade build files only
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-prod \
-    --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
+RUN --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
     uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
-    # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
 
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
@@ -141,10 +135,7 @@ ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 # Copy relevant csd-optimade build files only
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test \
-    uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
-    # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12 && \
+RUN uv sync --no-cache --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
     # Remove duplicated csd-python-api install
     rm -rf /opt/csd-optimade/.venv/lib/python3.11/site-packages/lib/ccdc
 
@@ -189,11 +180,8 @@ COPY --from=csd-ingester /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-op
 # Copy relevant csd-optimade build files only, this time do not install any extras
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-server \
-    --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
-    uv sync --locked --no-dev && \
-    # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
+RUN  --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
+    uv sync --no-cache --locked --no-dev
 
 # Decrypt, decompress and serve the CSD data: requires the CSD_ACTIVATION_KEY at runtime
 COPY <<-"EOF" /entrypoint.sh
