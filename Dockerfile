@@ -88,7 +88,7 @@ RUN --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
-    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
+    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk
 
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
@@ -135,9 +135,7 @@ ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 # Copy relevant csd-optimade build files only
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN uv sync --no-cache --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
-    # Remove duplicated csd-python-api install
-    rm -rf /opt/csd-optimade/.venv/lib/python3.11/site-packages/lib/ccdc
+RUN uv sync --no-cache --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk
 
 COPY tests /opt/csd-optimade/tests
 
