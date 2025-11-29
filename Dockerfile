@@ -65,12 +65,9 @@ FROM python-setup AS csd-ingester
 
 WORKDIR /opt/csd-optimade
 
-# Install and cache CSD Python API and its dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv pip install csd-python-api --extra-index-url https://pip.ccdc.cam.ac.uk
-
 # Copy the CSD data into the ingestion image
 COPY --from=csd-data /opt/ccdc/ccdc-data /opt/ccdc/ccdc-data
+
 ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 
 # Only changes to the ingest module will trigger a rebuild; rest will be mounted

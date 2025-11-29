@@ -194,9 +194,7 @@ dependencies = [
     { name = "xgboost" },
 ]
 wheels = [
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.5.0-py311-none-linux_x86_64.whl", hash = "sha256:057fbca6281a351ea1913920d43892c64b45ef64f1086f7755a1fb50ff220e75" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.5.0-py311-none-macosx_10_15_x86_64.whl", hash = "sha256:e6a3dfefae039eda6cf19cf8212d4f6f4f41498f19de18df2cfc573ce2a4d732" },
-    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.5.0-py311-none-win_amd64.whl", hash = "sha256:611b1d3473915127c38aee95292b96d10d5c0d72661aead563a836437cc8cedc" },
+    { url = "https://pip.ccdc.cam.ac.uk/csd-python-api/csd_python_api-3.5.0-py311-none-linux_x86_64.whl", hash = "sha256:c2e407fff18bbaae2b99ea1ed40b8b2f4a5838f1cf241da3c0b33b8b6e1949e6" },
 ]
 
 [[package]]
