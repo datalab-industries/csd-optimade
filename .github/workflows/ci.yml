@@ -35,7 +35,7 @@ jobs:
         python-version: ${{ env.LINTING_PY_VERSION }}
 
     - name: Set up uv
-      uses: astral-sh/setup-uv@v10
+      uses: astral-sh/setup-uv@v10.3.3
       with:
         enable-cache: true
 
