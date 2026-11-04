@@ -124,9 +124,9 @@ def cli():
         "--num-structures",
         type=int,
         nargs="?",
-        const=int(1_290_000),
-        default=int(1_290_000),
-        help="Number of structures from the CSD to ingest (DEFAULT: all)",
+        const=None,
+        default=None,
+        help="Number of structures from the CSD to ingest (DEFAULT: all entries in the installed CSD)",
     )
     parser.add_argument("--run-name", type=str, default="csd")
 
@@ -151,8 +151,12 @@ def cli():
         # Assuming approximately 3 GB for chunk_size 10_000 and a minimum for 500 MB per process to load the DB
         chunk_size = int((available_memory - base_memory_gb) / memory_per_item_gb)
 
-    if args.num_structures > 1_300_000:
-        args.num_structures = 1_300_000
+    # Never ingest more than the CSD contains, but do not impose any fixed cap
+    # that would silently drop the newest entries as the CSD grows
+    csd_size = len(ccdc.io.EntryReader("CSD"))
+    if args.num_structures is None or args.num_structures > csd_size:
+        args.num_structures = csd_size
+    LOG.info("Ingesting %d of %d CSD entries", args.num_structures, csd_size)
 
     estimated_peak_memory_usage = base_memory_gb + memory_per_item_gb * chunk_size
     if estimated_peak_memory_usage > available_memory:
