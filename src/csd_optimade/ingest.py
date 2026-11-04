@@ -55,8 +55,13 @@ def from_csd_database(
     """Loop through a chunk of the entry reader and map the entries to OPTIMADE
     structures, plus a list of any linked resources.
     """
-    chunked_structures = [entry for entry in [reader[r] for r in range_]]
-    for entry in chunked_structures:
+    num_entries = len(reader)
+    for r in range_:
+        # Stop at the end of the database so that a partial final chunk is
+        # still processed, rather than lost to an out-of-bounds error
+        if r >= num_entries:
+            break
+        entry = reader[r]
         if entry.identifier in BAD_IDENTIFIERS:
             continue
         try:
