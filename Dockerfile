@@ -56,7 +56,7 @@ FROM base-packages AS python-setup
 WORKDIR /opt/csd-optimade
 
 # Install uv for Python package management
-COPY --from=ghcr.io/astral-sh/uv:0.6.3 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=manual \
@@ -88,7 +88,7 @@ RUN --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
-    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
+    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk
 
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
