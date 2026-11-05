@@ -121,7 +121,7 @@ def from_csd_entry_directly(
     returning any attached citations as OPTIMADE references.
 
     """
-    asym_unit = entry.crystal.asymmetric_unit_molecule
+    crystal = entry.crystal
 
     dep_date: datetime.datetime | datetime.date | None = entry.deposition_date
     dep_date = (
@@ -129,35 +129,31 @@ def from_csd_entry_directly(
     )
 
     positions: list | None = None
+    packed_symbols: list[str] | None = None
     lattice_params: list[list[float | None]] = [[None, None, None], [None, None, None]]
     cell_volume: float | None = None
-    packed_mol: ccdc.molecule.Molecule | None = None
     if entry.has_3d_structure:
-        packed_mol = entry.crystal.packing()
+        packed_mol = crystal.packing()
+        positions = []
+        packed_symbols = []
         try:
-            positions = [
-                [atom.coordinates.x, atom.coordinates.y, atom.coordinates.z]
-                for atom in packed_mol.atoms
-            ]
+            for atom in packed_mol.atoms:
+                coords = atom.coordinates
+                positions.append([coords.x, coords.y, coords.z])
+                packed_symbols.append(atom.atomic_symbol)
             # Handle case that atoms is []
             if not positions:
                 positions = None
         except AttributeError:
             positions = None
 
+        cell_lengths = crystal.cell_lengths
+        cell_angles = crystal.cell_angles
         lattice_params = [
-            [
-                entry.crystal.cell_lengths.a,
-                entry.crystal.cell_lengths.b,
-                entry.crystal.cell_lengths.c,
-            ],
-            [
-                entry.crystal.cell_angles.alpha,
-                entry.crystal.cell_angles.beta,
-                entry.crystal.cell_angles.gamma,
-            ],
+            [cell_lengths.a, cell_lengths.b, cell_lengths.c],
+            [cell_angles.alpha, cell_angles.beta, cell_angles.gamma],
         ]
-        cell_volume = entry.crystal.cell_volume
+        cell_volume = crystal.cell_volume
 
     references: list[ReferenceResource] = _get_citations(entry)
     relationships: dict[str, dict] | None = None
@@ -175,11 +171,11 @@ def from_csd_entry_directly(
         reduced_formula, elements = _reduce_csd_formula(entry.formula)
     except ValueError:
         reduced_formula = None
-        elements = {d.atomic_symbol for d in asym_unit.atoms}
+        elements = {d.atomic_symbol for d in crystal.asymmetric_unit_molecule.atoms}
 
     except Exception:
         warnings.warn(
-            f"Unable to reduce formula for {entry.identifier}: {entry.formula} / {asym_unit.formula}"
+            f"Unable to reduce formula for {entry.identifier}: {entry.formula} / {crystal.asymmetric_unit_molecule.formula}"
         )
         reduced_formula = None
 
@@ -198,22 +194,18 @@ def from_csd_entry_directly(
         for e in elements
     ]
 
-    optimade_species_at_sites: list[str] | None = (
-        [atom.atomic_symbol for atom in packed_mol.atoms]
-        if (positions and packed_mol)
-        else None
-    )
+    optimade_species_at_sites: list[str] | None = packed_symbols if positions else None
 
     # From CSD docs:
     # > Non standard spacegroup numbers, those above 230, will be returned with setting number 0. Unrecognised spacegroups will raise a RuntimeError.
     try:
-        space_group_int_number = entry.crystal.spacegroup_number_and_setting[0]
+        space_group_int_number = crystal.spacegroup_number_and_setting[0]
     except RuntimeError:
         space_group_int_number = None
     if space_group_int_number and space_group_int_number > 230:
         space_group_int_number = None
 
-    space_group_symbol = entry.crystal.spacegroup_symbol
+    space_group_symbol = crystal.spacegroup_symbol
 
     if entry.has_disorder:
         structure_features += ["disorder"]
@@ -260,14 +252,14 @@ def from_csd_entry_directly(
                 _csd_lattice_parameter_beta=lattice_params[1][1],
                 _csd_lattice_parameter_gamma=lattice_params[1][2],
                 _csd_cell_volume=cell_volume,
-                _csd_crystal_system=entry.crystal.crystal_system,
-                _csd_space_group_symbol_hermann_mauginn=entry.crystal.spacegroup_symbol,  # Need to double-check if this matches OPTIMADE 1.2 definition
+                _csd_crystal_system=crystal.crystal_system,
+                _csd_space_group_symbol_hermann_mauginn=space_group_symbol,  # Need to double-check if this matches OPTIMADE 1.2 definition
                 _csd_chemical_name=entry.chemical_name,
                 _csd_inchi=[inchi.inchi for inchi in inchis] if inchis else None,
                 _csd_inchi_key=[inchi.key for inchi in inchis] if inchis else None,
-                _csd_smiles=entry.crystal.molecule.smiles,
-                _csd_z_value=entry.crystal.z_value,
-                _csd_z_prime=entry.crystal.z_prime,
+                _csd_smiles=crystal.molecule.smiles,
+                _csd_z_value=crystal.z_value,
+                _csd_z_prime=crystal.z_prime,
                 _csd_ccdc_number=entry.ccdc_number,
                 _csd_deposition_date={"$date": dep_date},
                 _csd_disorder_details=entry.disorder_details,
