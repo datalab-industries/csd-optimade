@@ -89,19 +89,27 @@ def cli():
         if args.drop_first and test_client:
             test_client.drop_database(database_name)
 
-    override_kwargs["license"] = generate_license_link()
+    # Since optimade-maker 0.6, `override_config` takes precedence over `OPTIMAKE_*`
+    # env vars, so only apply these defaults where the env does not set them (as in 0.1.x)
+    defaults = dict(
+        database_backend="mongodb" if mongo_uri else "mongomock",
+        provider_fields=generate_csd_provider_fields(),
+        provider=generate_csd_provider_info(),
+        implementation=generate_implementation_info(),
+        license=generate_license_link(),
+        # optimade-maker>=0.6 no longer sets this, so without it nothing is inserted
+        insert_from_jsonl=str(Path(args.jsonl_path).resolve()),
+        # set by optimade-maker 0.5, but off by default in optimade-python-tools
+        create_default_index=True,
+    )
+    for key, value in defaults.items():
+        if f"OPTIMAKE_{key.upper()}" not in os.environ:
+            override_kwargs.setdefault(key, value)
 
     optimake_server = OptimakeServer(
         jsonl_path,
         host="0.0.0.0",
         port=args.port,
-        override_config=dict(
-            mongo_uri=mongo_uri,
-            database_backend="mongodb" if mongo_uri else "mongomock",
-            provider_fields=generate_csd_provider_fields(),
-            provider=generate_csd_provider_info(),
-            implementation=generate_implementation_info(),
-            **override_kwargs,
-        ),
+        override_config=dict(mongo_uri=mongo_uri, **override_kwargs),
     )
     optimake_server.start_api()

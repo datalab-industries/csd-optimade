@@ -19,6 +19,7 @@ import json
 import logging
 import math
 import os
+import tempfile
 import time
 import warnings
 from functools import partial
@@ -201,6 +202,9 @@ def cli():
         provider_prefix=provider["prefix"],
     ).model_dump_json()
 
+    # Chunks are written to `data/` relative to the working directory
+    Path("data").mkdir(exist_ok=True)
+
     total_bad = 0
     total = 0
     with Pool(pool_size) as pool:
@@ -224,7 +228,7 @@ def cli():
     # Combine all results into a single JSONL file, first temporary
     output_dir = Path("data")
     output_file = output_dir / f"{run_name}-optimade.jsonl"
-    tmp_dir = Path(f"/tmp/csd-optimade/{run_name}")
+    tmp_dir = Path(tempfile.gettempdir()) / "csd-optimade" / run_name
     tmp_dir.mkdir(exist_ok=True, parents=True)
     tmp_jsonl_path = tmp_dir / output_file.name
 
