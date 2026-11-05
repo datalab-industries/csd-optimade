@@ -187,7 +187,11 @@ def cli():
     provider = generate_csd_provider_info()
 
     info_string = json.dumps(
-        {"data": info["data"].model_dump(exclude_unset=True, exclude_none=False)}
+        {
+            "data": info["data"].model_dump(
+                mode="json", exclude_unset=True, exclude_none=False
+            )
+        }
     )
 
     entry_info_structures = _construct_entry_type_info(
