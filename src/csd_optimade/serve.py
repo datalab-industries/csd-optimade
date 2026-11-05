@@ -1,4 +1,5 @@
 import argparse
+import os
 import tempfile
 import typing
 from pathlib import Path
@@ -60,6 +61,9 @@ def cli():
 
     # Allow user to specify a real MongoDB
     mongo_uri = args.mongo_uri
+    if not mongo_uri:
+        mongo_uri = os.getenv("OPTIMAKE_MONGO_URI")
+
     if mongo_uri:
         import logging
 
@@ -91,11 +95,13 @@ def cli():
         jsonl_path,
         host="0.0.0.0",
         port=args.port,
-        mongo_uri=mongo_uri,
-        database_backend="mongodb" if mongo_uri else "mongomock",
-        provider_fields=generate_csd_provider_fields(),
-        provider=generate_csd_provider_info(),
-        implementation=generate_implementation_info(),
-        **override_kwargs,
+        override_config=dict(
+            mongo_uri=mongo_uri,
+            database_backend="mongodb" if mongo_uri else "mongomock",
+            provider_fields=generate_csd_provider_fields(),
+            provider=generate_csd_provider_info(),
+            implementation=generate_implementation_info(),
+            **override_kwargs,
+        ),
     )
     optimake_server.start_api()

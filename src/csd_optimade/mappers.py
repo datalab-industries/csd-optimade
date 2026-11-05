@@ -204,6 +204,17 @@ def from_csd_entry_directly(
         else None
     )
 
+    # From CSD docs:
+    # > Non standard spacegroup numbers, those above 230, will be returned with setting number 0. Unrecognised spacegroups will raise a RuntimeError.
+    try:
+        space_group_int_number = entry.crystal.spacegroup_number_and_setting[0]
+    except RuntimeError:
+        space_group_int_number = None
+    if space_group_int_number and space_group_int_number > 230:
+        space_group_int_number = None
+
+    space_group_symbol = entry.crystal.spacegroup_symbol
+
     if entry.has_disorder:
         structure_features += ["disorder"]
 
@@ -239,6 +250,8 @@ def from_csd_entry_directly(
                 species_at_sites=optimade_species_at_sites,
                 cartesian_site_positions=positions,
                 structure_features=structure_features,
+                space_group_int_number=space_group_int_number,
+                space_group_symbol_hermann_maugin=space_group_symbol,
                 # Add custom CSD-specific fields
                 _csd_lattice_parameter_a=lattice_params[0][0],
                 _csd_lattice_parameter_b=lattice_params[0][1],
