@@ -110,6 +110,22 @@ This will install the CSD inside the container, run the ingestion pipeline and
 prepare an encrypted version of the CSD in the OPTIMADE JSONLines format.
 The file can be decrypted with your `CSD_ACTIVATION_KEY`.
 
+If you license the CSD via a floating licence server instead of an activation key,
+set `CSD_LICENCE_SERVER` (e.g., `http://myserver:1234`) instead of `CSD_ACTIVATION_KEY`.
+The server must be reachable from the build (for ingestion) and test containers.
+In this case you must also set `CSD_ENCRYPTION_KEY` to a passphrase of your choice,
+which is used to encrypt the CSD data in the images (and must be provided again at runtime).
+`CSD_ENCRYPTION_KEY` can also be set alongside an activation key, otherwise it defaults to
+the `CSD_ACTIVATION_KEY`.
+
+If you already have the CSD data installed locally, you can skip the download
+step (and the need for `CSD_INSTALLER_URL`) by providing the CSD data directory
+(typically `<install root>/ccdc-data/csd`) as a named build context:
+
+```shell
+docker build --secret id=env,src=.env --build-context csd-data=/path/to/ccdc-data/csd --target csd-optimade-server -t csd-optimade-server .
+```
+
 To launch the container (which will decrypt the file and start the OPTIMADE
 API locally):
 
@@ -129,9 +145,11 @@ docker buildx bake csd-optimade-server
 docker run --env-file .env -p 5000:5000 ghcr.io/datalab-industries/csd-optimade-server
 ```
 
+Setting `CSD_DATA_DIR=/path/to/ccdc-data/csd` will similarly use an existing local CSD data directory instead of the installer.
+
 ### Runtime configuration options
 
-As noted above, the `CSD_ACTIVATION_KEY` used to build the container must be provided at runtime.
+As noted above, the `CSD_ACTIVATION_KEY` (or `CSD_ENCRYPTION_KEY`, if set) used to build the container must be provided at runtime.
 
 The API container can also be configured with all the `OPTIMAKE_` prefixed environment variables,
 which are passed through to the underlying [optimade-python-tools server configuration](https://www.optimade.org/optimade-python-tools/latest/configuration/)
