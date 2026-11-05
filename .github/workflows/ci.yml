@@ -9,7 +9,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   LINTING_PY_VERSION: "3.11"  # The version of Python to use for linting (typically the minimum supported)
@@ -48,63 +47,26 @@ jobs:
       run: uv run pre-commit run --all-files || ( git status --short ; git diff ; exit 1 )
 
   pytest:
+    # Runs the test suite against a mocked CSD Python API: needs no CSD licence
+    # or secrets, so this also runs for pull requests from forks
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
 
-    - uses: docker/login-action@v3
+    - name: Set up Python ${{ env.LINTING_PY_VERSION }}
+      uses: actions/setup-python@v5
       with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        python-version: ${{ env.LINTING_PY_VERSION }}
 
-    - name: Maximise disk space
-      run: |
-        df -h
-        sudo swapoff -a
-        sudo apt clean
-        sudo apt autoremove -y
-        sudo apt autoclean -y
-        sudo rm -rf /swapfile /usr/share/dotnet /usr/local/lib/android /opt/ghc
-        df -h
-        sudo rm -rf "$AGENT_TOOLSDIRECTORY" \
-          /opt/google/chrome \
-          /opt/microsoft/msedge \
-          /opt/microsoft/powershell \
-          /opt/pipx \
-          /usr/lib/mono \
-          /usr/local/julia* \
-          /usr/local/lib/node_modules \
-          /usr/local/share/chromium \
-          /usr/local/share/powershell \
-          /usr/share/swift
-        df -h
-
-    - name: Build latest changes
-      uses: docker/bake-action@v6
-      env:
-        CSD_ACTIVATION_KEY: '${{ secrets.CSD_ACTIVATION_KEY }}'
+    - name: Set up uv
+      uses: astral-sh/setup-uv@v3
       with:
-        source: "."
-        targets: "csd-ingester-test"
-        push: false
-        load: true
-        set: |
-          *.output=type=docker,compression=zstd
+        version: "0.6.x"
+        enable-cache: true
 
-    - name: Clear buildx cache
-      run: |
-        df -h
-        docker system df
-        docker buildx prune --force
-        docker system df
-        df -h
+    - name: Install locked dependencies
+      run: uv sync --locked --all-extras --extra-index-url https://pip.ccdc.cam.ac.uk
 
-    - name: Run test container
-      env:
-        CSD_ACTIVATION_KEY: ${{ secrets.CSD_ACTIVATION_KEY }}
-      run: |
-        docker run \
-          -e CSD_ACTIVATION_KEY \
-          ghcr.io/datalab-industries/csd-optimade-test:latest
+    - name: Run pytest
+      run: uv run pytest

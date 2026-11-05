@@ -58,6 +58,18 @@ class MockCSDEntry:
     crystal: MockCSDCrystal = MockCSDCrystal()
 
 
+def is_csd_available() -> bool:
+    """Check whether the CSD Python API can be imported and the CSD read
+    (requires a valid licence)."""
+    try:
+        from ccdc import io
+
+        io.EntryReader("CSD")
+        return True
+    except Exception:
+        return False
+
+
 def generate_same_random_csd_entries(csd_available=True, num_entries=1000):
     """Pick some random entries from the CSD, with a fixed seed."""
     if not csd_available:

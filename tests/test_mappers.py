@@ -10,14 +10,19 @@ from optimade.adapters.structures.utils import cellpar_to_cell
 
 from csd_optimade.mappers import _reduce_csd_formula
 
-from .utils import generate_same_random_csd_entries
+from .utils import generate_same_random_csd_entries, is_csd_available
 
 if TYPE_CHECKING:
     import ccdc.entry
     from optimade.models import Resource, StructureResource
 
-TEST_ENTRIES = generate_same_random_csd_entries()
-TEST_ENTRIES_ALL = generate_same_random_csd_entries(num_entries=1_290_000)
+# Only sample real entries when the CSD is usable, so that collection does not
+# fail without a licence (the tests themselves are then skipped)
+CSD_AVAILABLE = is_csd_available()
+TEST_ENTRIES = generate_same_random_csd_entries() if CSD_AVAILABLE else []
+TEST_ENTRIES_ALL = (
+    generate_same_random_csd_entries(num_entries=1_290_000) if CSD_AVAILABLE else []
+)
 
 
 def check_entry(
