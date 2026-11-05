@@ -133,7 +133,13 @@ docker run --env-file .env -p 5000:5000 ghcr.io/datalab-industries/csd-optimade-
 
 As noted above, the `CSD_ACTIVATION_KEY` used to build the container must be provided at runtime.
 
-The API container can also be configured with all the `OPTIMAKE_` prefixed environment variables.
+The API container can also be configured with all the `OPTIMAKE_` prefixed environment variables,
+which are passed through to the underlying [optimade-python-tools server configuration](https://www.optimade.org/optimade-python-tools/latest/configuration/)
+(e.g., `OPTIMAKE_PAGE_LIMIT=50` sets `page_limit`).
+Values are parsed as JSON where possible, so `true`, numbers, lists and objects can be provided directly.
+Any `OPTIMAKE_` variable takes precedence over the defaults set by `csd-serve`
+(provider info, provider fields, license, database backend and JSONL insertion),
+while explicit `csd-serve` command-line flags (e.g., `--mongo-uri`, `--no-insert`) take precedence over both.
 
 The most important ones are listed here:
 
@@ -157,9 +163,10 @@ If `false`, only the API will be started, with no database rebuild.
 > [!NOTE]
 > When used in production with the full CSD database, performance will be
 > significantly improved by creating the appropriate indexes for queryable
-> fields in MongoDB. This may be partially handled by `optimade-maker` and
-> `optimade-python-tools`, but you may wish to also tune index performance
-> for your particular use case.
+> fields in MongoDB. `csd-serve` asks `optimade-python-tools` to create a set
+> of default indexes when inserting the JSONL data (`create_default_index`,
+> which can be disabled with `OPTIMAKE_CREATE_DEFAULT_INDEX=false`), but you
+> may wish to also tune index performance for your particular use case.
 
 ## Contributing and Getting Help
 
