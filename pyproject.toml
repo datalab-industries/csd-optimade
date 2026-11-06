@@ -21,7 +21,7 @@ classifiers = [
 requires-python = ">= 3.11, < 3.12"
 dependencies = [
     "optimade ~= 1.3",
-    "optimade-maker ~= 0.7",
+    "optimade-maker ~= 1.0",
     "tqdm ~= 4.66",
     "pymongo >= 4, < 5",
 ]
@@ -29,6 +29,7 @@ dependencies = [
 [project.scripts]
 csd-ingest = "csd_optimade.ingest:cli"
 csd-serve = "csd_optimade.serve:cli"
+csd-audit = "csd_optimade.audit:cli"
 
 [project.optional-dependencies]
 dev = [
@@ -40,7 +41,7 @@ dev = [
 ]
 
 ingest = [
-    "csd-python-api >= 3, < 4",  # requires https://pip.ccdc.cam.ac.uk registry
+    "csd-python-api >= 3.6.0, < 4",  # requires https://pip.ccdc.cam.ac.uk registry
     "psutil ~= 6.1"
 ]
 

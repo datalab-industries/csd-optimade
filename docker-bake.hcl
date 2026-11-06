@@ -1,5 +1,5 @@
 variable "CI" {
-  // Set to true if running in a CI environment; this affects how caching is handled
+  // Set to true if running in a CI environment (currently unused)
   default = false
 }
 
@@ -33,6 +33,23 @@ variable "CSD_INSTALLER_URL" {
   default = ""
 }
 
+variable "CSD_ENCRYPTION_KEY" {
+  // Optional passphrase used to encrypt the CSD data inside the images (build and runtime);
+  // defaults to CSD_ACTIVATION_KEY, and is required when using a licence server
+  default = ""
+}
+
+variable "CSD_LICENCE_SERVER" {
+  // Optional floating licence server URL (e.g., `http://myserver:1234`) to use instead of CSD_ACTIVATION_KEY
+  default = ""
+}
+
+variable "CSD_DATA_DIR" {
+  // Optional path to the root of an existing local CCDC installation (i.e., the directory
+  // containing `ccdc-data/csd`); if set, this is used instead of downloading the CSD with the installer
+  default = ""
+}
+
 // Used in the CI to appropriately tag the images
 // based on events
 target "docker-metadata-action" {}
@@ -51,9 +68,14 @@ target "csd-ingester-test" {
     "type=registry,ref=${IMAGE_BASE}-test:cache",
     "type=gha",
   ]
-  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
-  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
+  secret = [
+    "type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY",
+    "type=env,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY",
+    "type=env,id=csd-licence-server,env=CSD_LICENCE_SERVER",
+    "id=csd-installer-url,env=CSD_INSTALLER_URL",
+  ]
+  contexts = CSD_DATA_DIR != "" ? {"csd-data" = CSD_DATA_DIR} : {}
 }
 
 target "csd-optimade-dev" {
@@ -67,8 +89,13 @@ target "csd-optimade-dev" {
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
   ]
-  cache-to = []
-  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
+  secret = [
+    "type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY",
+    "type=env,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY",
+    "type=env,id=csd-licence-server,env=CSD_LICENCE_SERVER",
+    "id=csd-installer-url,env=CSD_INSTALLER_URL",
+  ]
+  contexts = CSD_DATA_DIR != "" ? {"csd-data" = CSD_DATA_DIR} : {}
 }
 
 target "csd-optimade-server" {
@@ -82,6 +109,11 @@ target "csd-optimade-server" {
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
   ]
-  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}:cache,mode=max"]
-  secret = ["type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY", "id=csd-installer-url,env=CSD_INSTALLER_URL"]
+  secret = [
+    "type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY",
+    "type=env,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY",
+    "type=env,id=csd-licence-server,env=CSD_LICENCE_SERVER",
+    "id=csd-installer-url,env=CSD_INSTALLER_URL",
+  ]
+  contexts = CSD_DATA_DIR != "" ? {"csd-data" = CSD_DATA_DIR} : {}
 }

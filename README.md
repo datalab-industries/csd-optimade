@@ -62,6 +62,25 @@ Depending on parallelisation, this process should take a few minutes to ingest
 the entire CSD on consumer hardware (around 10 minutes with 8 processes on an AMD Ryzen 7 PRO 7840U mobile
 processor, requiring around 3 GB of RAM per process with the default chunk size of 100k).
 
+### Auditing the mapping
+
+The `csd-audit` entrypoint runs every CSD entry through the same mapping and serialisation as `csd-ingest`,
+but one entry at a time in a single process, and records the outcome of each entry rather than the data itself:
+
+```shell
+csd-audit run --output data/csd-audit.jsonl
+csd-audit summarise data/csd-audit.jsonl
+```
+
+Each line of the audit file records an entry's `status` (`ok`, `failed`, `read_error`, `skipped` or `interrupted`),
+the stage, type, message and traceback of any error, any warnings raised, which key OPTIMADE fields are `missing`
+from the output, and the time taken to read, map and serialise it.
+The run can be stopped and continued with `--resume`, and `--start`/`--stop` restrict it to a range of entries.
+If a single entry takes longer than `--hang-timeout` seconds (default 300), a stack trace is written to
+`<output>.hangs.log`; if the run is then killed, `--resume` records that entry as `interrupted` and continues after it.
+`summarise` writes counts of statuses, errors, warnings and missing fields, timing percentiles and the slowest entries
+to `<output>.summary.json`.
+
 ### Creating an OPTIMADE API
 
 The `csd-serve` entrypoint provides a thin wrapper around the
@@ -110,6 +129,22 @@ This will install the CSD inside the container, run the ingestion pipeline and
 prepare an encrypted version of the CSD in the OPTIMADE JSONLines format.
 The file can be decrypted with your `CSD_ACTIVATION_KEY`.
 
+If you license the CSD via a floating licence server instead of an activation key,
+set `CSD_LICENCE_SERVER` (e.g., `http://myserver:1234`) instead of `CSD_ACTIVATION_KEY`.
+The server must be reachable from the build (for ingestion) and test containers.
+In this case you must also set `CSD_ENCRYPTION_KEY` to a passphrase of your choice,
+which is used to encrypt the CSD data in the images (and must be provided again at runtime).
+`CSD_ENCRYPTION_KEY` can also be set alongside an activation key, otherwise it defaults to
+the `CSD_ACTIVATION_KEY`.
+
+If you already have the CSD data installed locally, you can skip the download
+step (and the need for `CSD_INSTALLER_URL`) by providing the CSD data directory
+(typically `<install root>/ccdc-data/csd`) as a named build context:
+
+```shell
+docker build --secret id=env,src=.env --build-context csd-data=/path/to/ccdc-data/csd --target csd-optimade-server -t csd-optimade-server .
+```
+
 To launch the container (which will decrypt the file and start the OPTIMADE
 API locally):
 
@@ -129,9 +164,11 @@ docker buildx bake csd-optimade-server
 docker run --env-file .env -p 5000:5000 ghcr.io/datalab-industries/csd-optimade-server
 ```
 
+Setting `CSD_DATA_DIR` to the root of an existing local CCDC installation (i.e., the directory containing `ccdc-data/csd`) will similarly use its CSD data instead of the installer.
+
 ### Runtime configuration options
 
-As noted above, the `CSD_ACTIVATION_KEY` used to build the container must be provided at runtime.
+As noted above, the `CSD_ACTIVATION_KEY` (or `CSD_ENCRYPTION_KEY`, if set) used to build the container must be provided at runtime.
 
 The API container can also be configured with all the `OPTIMAKE_` prefixed environment variables,
 which are passed through to the underlying [optimade-python-tools server configuration](https://www.optimade.org/optimade-python-tools/latest/configuration/)

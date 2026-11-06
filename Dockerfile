@@ -1,4 +1,4 @@
-FROM ubuntu:noble-20241118.1 AS base-packages
+FROM ubuntu:noble-20261024.1 AS base-packages
 
 # Various GUI libs needed for CSD installer and Python API
 RUN apt update && \
@@ -32,7 +32,7 @@ RUN apt update && \
     && \
     rm -rf /var/lib/apt/lists/*
 
-FROM base-packages AS csd-data
+FROM base-packages AS csd-installer
 
 ARG CSD_INSTALLER_URL=
 
@@ -43,30 +43,48 @@ RUN \
     wget -O /opt/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/csd-installer.sh; \
     /opt/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
 
+# The root of a CCDC installation, of which only `ccdc-data/csd` is used.
+# By default this is taken from the installer above, but it can be overridden with
+# an existing local CCDC installation via a named build context, e.g.,
+#   docker build --build-context csd-data=/path/to/CCDC/root ...
+# in which case the installer stage is skipped entirely.
+FROM scratch AS csd-data
+COPY --from=csd-installer /opt/ccdc/ccdc-data/csd /ccdc-data/csd
+
 FROM base-packages AS compress-csd-data
 
-COPY --from=csd-data /opt/ccdc/ccdc-data/csd /tmp/csd
+# The CSD data (and later the ingested data) is encrypted with CSD_ENCRYPTION_KEY,
+# falling back to CSD_ACTIVATION_KEY if not provided (required when using a licence server)
 RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
+    --mount=type=secret,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY \
+    --mount=type=bind,from=csd-data,source=ccdc-data/csd,target=/tmp/csd \
+    CSD_ENCRYPTION_KEY="${CSD_ENCRYPTION_KEY:-$CSD_ACTIVATION_KEY}" && \
+    : "${CSD_ENCRYPTION_KEY:?One of CSD_ENCRYPTION_KEY or CSD_ACTIVATION_KEY must be provided}" && \
     tar -czf /opt/csd.tar.gz -C /tmp csd && \
-    rm -rf /tmp/csd && \
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd.tar.gz
+    gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --symmetric /opt/csd.tar.gz && \
+    rm /opt/csd.tar.gz
 
 FROM base-packages AS python-setup
 
 WORKDIR /opt/csd-optimade
 
 # Install uv for Python package management
-COPY --from=ghcr.io/astral-sh/uv:0.6.3 /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.13.4 /uv /usr/local/bin/uv
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
     UV_PYTHON_DOWNLOADS=manual \
     UV_PYTHON=python3.11 \
-    UV_NO_SYNC=1
+    UV_NO_SYNC=1 \
+    UV_NO_CACHE=1
 
 # Set up Python 3.11 environment
+# The csd-python-api compiled extensions link against libpython3.so, which uv's managed
+# Python provides but not on the default linker path, so register its lib dir with ldconfig
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv python install 3.11 && \
-    uv venv
+    uv venv && \
+    .venv/bin/python -c "import sys; print(sys.base_prefix + '/lib')" > /etc/ld.so.conf.d/uv-python.conf && \
+    ldconfig
 
 FROM python-setup AS csd-ingester
 
@@ -81,16 +99,13 @@ ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 COPY ./src/csd_optimade/ingest.py /opt/csd-optimade/src/csd_optimade/ingest.py
 
 # Copy relevant csd-optimade build files only
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-prod \
-    --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
+RUN --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
-    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
-    # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
+    uv sync --locked --extra ingest --no-dev --extra-index-url https://pip.ccdc.cam.ac.uk
 
 # Can be set at build time to retrigger the step below
 ARG REINGEST=false
@@ -98,17 +113,28 @@ ARG CSD_NUM_STRUCTURES=
 
 # Mount secrets to manually activate the CSD only when needed during ingestion
 # and give builder a chunk /tmp to write to (both as a data directory, and as its own /tmp)
+# Licensing uses a floating licence server if CSD_LICENCE_SERVER is provided
+# (e.g., "http://myserver:1234"), otherwise the CSD_ACTIVATION_KEY
 RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
+    --mount=type=secret,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY \
+    --mount=type=secret,id=csd-licence-server,env=CSD_LICENCE_SERVER \
     --mount=type=bind,source=src,target=/opt/csd-optimade/src,rw=true \
     --mount=type=bind,source=LICENSE,target=/opt/csd-optimade/LICENSE \
     --mount=type=bind,source=README.md,target=/opt/csd-optimade/README.md \
     --mount=type=bind,source=pyproject.toml,target=/opt/csd-optimade/pyproject.toml \
     --mount=type=bind,source=uv.lock,target=/opt/csd-optimade/uv.lock \
+    CSD_ENCRYPTION_KEY="${CSD_ENCRYPTION_KEY:-$CSD_ACTIVATION_KEY}" && \
+    : "${CSD_ENCRYPTION_KEY:?One of CSD_ENCRYPTION_KEY or CSD_ACTIVATION_KEY must be provided}" && \
     mkdir -p /opt/ccdc/ccdc-data && \
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz  &&\
+    gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz  &&\
     tar -xzf /opt/csd.tar.gz -C /opt/ccdc/ccdc-data && \
     mkdir -p /root/.config/CCDC && \
-    echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini && \
+    if [ -n "${CSD_LICENCE_SERVER}" ]; then \
+        echo "[licensing_v1]\nfloating_licence_server=${CSD_LICENCE_SERVER}" > /root/.config/CCDC/ApplicationServices.ini; \
+    else \
+        : "${CSD_ACTIVATION_KEY:?One of CSD_LICENCE_SERVER or CSD_ACTIVATION_KEY must be provided}" && \
+        echo "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini; \
+    fi && \
     mkdir -p data && \
     # For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
     mkdir -p /opt/ccdc/ccdc-software && \
@@ -119,8 +145,10 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
     rm -rf /opt/ccdc /opt/csd.tar.gz && \
     gzip -9 /opt/csd-optimade/data/csd-optimade.jsonl && \
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --symmetric /opt/csd-optimade/data/csd-optimade.jsonl.gz && \
-    cp /opt/csd-optimade/data/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/csd-optimade.jsonl.gz.gpg
+    gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --symmetric \
+      --output /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/data/csd-optimade.jsonl.gz && \
+    # Remove the unencrypted ingested data so that it never persists in this layer
+    rm /opt/csd-optimade/data/csd-optimade.jsonl.gz
 
 
 FROM python-setup AS csd-ingester-test
@@ -137,10 +165,7 @@ ENV CSD_DATA_DIRECTORY=/opt/ccdc/ccdc-data/csd
 # Copy relevant csd-optimade build files only
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-test \
-    uv sync --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
-    # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12 && \
+RUN uv sync --no-cache --locked --extra ingest --extra dev --extra-index-url https://pip.ccdc.cam.ac.uk && \
     # Remove duplicated csd-python-api install
     rm -rf /opt/csd-optimade/.venv/lib/python3.11/site-packages/lib/ccdc
 
@@ -150,18 +175,27 @@ COPY <<-"EOF" /opt/csd-optimade/test-entrypoint.sh
 #!/bin/bash
 set -e
 
-if [ -z "$CSD_ACTIVATION_KEY" ]; then
- echo "CSD_ACTIVATION_KEY not set" >&2
+CSD_ENCRYPTION_KEY="${CSD_ENCRYPTION_KEY:-$CSD_ACTIVATION_KEY}"
+if [ -z "$CSD_ENCRYPTION_KEY" ]; then
+ echo "One of CSD_ENCRYPTION_KEY or CSD_ACTIVATION_KEY must be set" >&2
  exit 1
 fi
 
+# A floating licence server (CSD_LICENCE_SERVER) takes precedence over an activation key
 mkdir -p /root/.config/CCDC
-echo -e "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini
+if [ -n "$CSD_LICENCE_SERVER" ]; then
+ echo -e "[licensing_v1]\nfloating_licence_server=${CSD_LICENCE_SERVER}" > /root/.config/CCDC/ApplicationServices.ini
+elif [ -n "$CSD_ACTIVATION_KEY" ]; then
+ echo -e "[licensing_v1]\nlicence_key=${CSD_ACTIVATION_KEY}" > /root/.config/CCDC/ApplicationServices.ini
+else
+ echo "One of CSD_LICENCE_SERVER or CSD_ACTIVATION_KEY must be set" >&2
+ exit 1
+fi
 # For some reason, this folder must be present when reading sqlite, otherwise it assumes it cannot
 mkdir -p /opt/ccdc/ccdc-software
 
 echo "Decrypting CSD data..."
-time gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz
+time gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --decrypt /opt/csd.tar.gz.gpg > /opt/csd.tar.gz
 time tar -xzf /opt/csd.tar.gz -C /opt/ccdc/ccdc-data
 echo "Decompressing CSD data..."
 
@@ -185,30 +219,29 @@ COPY --from=csd-ingester /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-op
 # Copy relevant csd-optimade build files only, this time do not install any extras
 COPY LICENSE pyproject.toml uv.lock  /opt/csd-optimade/
 COPY src /opt/csd-optimade/src
-RUN --mount=type=cache,target=/root/.cache/uv,id=uv-cache-server \
-    --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
-    uv sync --locked --no-dev && \
-    # Remove unecessary mandatory deps from csd-python-api
-    uv pip uninstall tensorflow tensorflow-estimator xgboost keras jax google-pasta opt-einsum nvidia-nccl-cu12
+RUN  --mount=type=bind,source=.git,target=/opt/csd-optimade/.git \
+    uv sync --no-cache --locked --no-dev
 
-# Decrypt, decompress and serve the CSD data: requires the CSD_ACTIVATION_KEY at runtime
+# Decrypt, decompress and serve the CSD data: requires the CSD_ENCRYPTION_KEY
+# (or CSD_ACTIVATION_KEY, if that was used to encrypt) at runtime
 COPY <<-"EOF" /entrypoint.sh
 #!/bin/bash
 set -e
 
-if [ -z "$CSD_ACTIVATION_KEY" ]; then
- echo "CSD_ACTIVATION_KEY not set" >&2
+CSD_ENCRYPTION_KEY="${CSD_ENCRYPTION_KEY:-$CSD_ACTIVATION_KEY}"
+if [ -z "$CSD_ENCRYPTION_KEY" ]; then
+ echo "One of CSD_ENCRYPTION_KEY or CSD_ACTIVATION_KEY must be set" >&2
  exit 1
 fi
 
 if [ "$CSD_OPTIMADE_INSERT" = "1" ] || [ "$CSD_OPTIMADE_INSERT" = "true" ]; then
     # Run the API twice: once to wipe and reinsert the data then exit, the second to run the API
-    (gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl;
+    (gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl;
     exec uv run --no-sync csd-serve --port 5001 --exit-after-insert --drop-first /opt/csd-optimade/optimade.jsonl) &
 fi
 
 if [ "$OPTIMAKE_DATABASE_BACKEND" = "mongomock" ]; then
-    gpg --batch --passphrase ${CSD_ACTIVATION_KEY} --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl
+    gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --decrypt /opt/csd-optimade/csd-optimade.jsonl.gz.gpg | gunzip > /opt/csd-optimade/optimade.jsonl
     exec uv run --no-sync csd-serve --port 5001 /opt/csd-optimade/optimade.jsonl
 else
     # Run CLI with 'fake' file
