@@ -29,6 +29,7 @@ dependencies = [
 [project.scripts]
 csd-ingest = "csd_optimade.ingest:cli"
 csd-serve = "csd_optimade.serve:cli"
+csd-audit = "csd_optimade.audit:cli"
 
 [project.optional-dependencies]
 dev = [

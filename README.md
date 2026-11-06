@@ -62,6 +62,25 @@ Depending on parallelisation, this process should take a few minutes to ingest
 the entire CSD on consumer hardware (around 10 minutes with 8 processes on an AMD Ryzen 7 PRO 7840U mobile
 processor, requiring around 3 GB of RAM per process with the default chunk size of 100k).
 
+### Auditing the mapping
+
+The `csd-audit` entrypoint runs every CSD entry through the same mapping and serialisation as `csd-ingest`,
+but one entry at a time in a single process, and records the outcome of each entry rather than the data itself:
+
+```shell
+csd-audit run --output data/csd-audit.jsonl
+csd-audit summarise data/csd-audit.jsonl
+```
+
+Each line of the audit file records an entry's `status` (`ok`, `failed`, `read_error`, `skipped` or `interrupted`),
+the stage, type, message and traceback of any error, any warnings raised, which key OPTIMADE fields are `missing`
+from the output, and the time taken to read, map and serialise it.
+The run can be stopped and continued with `--resume`, and `--start`/`--stop` restrict it to a range of entries.
+If a single entry takes longer than `--hang-timeout` seconds (default 300), a stack trace is written to
+`<output>.hangs.log`; if the run is then killed, `--resume` records that entry as `interrupted` and continues after it.
+`summarise` writes counts of statuses, errors, warnings and missing fields, timing percentiles and the slowest entries
+to `<output>.summary.json`.
+
 ### Creating an OPTIMADE API
 
 The `csd-serve` entrypoint provides a thin wrapper around the
