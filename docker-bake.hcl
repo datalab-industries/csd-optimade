@@ -1,5 +1,5 @@
 variable "CI" {
-  // Set to true if running in a CI environment; this affects how caching is handled
+  // Set to true if running in a CI environment (currently unused)
   default = false
 }
 
@@ -45,8 +45,8 @@ variable "CSD_LICENCE_SERVER" {
 }
 
 variable "CSD_DATA_DIR" {
-  // Optional path to an existing local CSD data directory (e.g., `<root>/ccdc-data/csd`);
-  // if set, this is used instead of downloading the CSD with the installer
+  // Optional path to the root of an existing local CCDC installation (i.e., the directory
+  // containing `ccdc-data/csd`); if set, this is used instead of downloading the CSD with the installer
   default = ""
 }
 
@@ -68,7 +68,6 @@ target "csd-ingester-test" {
     "type=registry,ref=${IMAGE_BASE}-test:cache",
     "type=gha",
   ]
-  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}-test:cache,mode=max"]
   tags = ["${IMAGE_BASE}-test:${VERSION}"]
   secret = [
     "type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY",
@@ -90,7 +89,6 @@ target "csd-optimade-dev" {
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
   ]
-  cache-to = []
   secret = [
     "type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY",
     "type=env,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY",
@@ -111,7 +109,6 @@ target "csd-optimade-server" {
     "type=registry,ref=${IMAGE_BASE}:${VERSION}",
     "type=registry,ref=${IMAGE_BASE}:cache",
   ]
-  cache-to = CI ? [] : ["type=registry,ref=${IMAGE_BASE}:cache,mode=max"]
   secret = [
     "type=env,id=csd-activation-key,env=CSD_ACTIVATION_KEY",
     "type=env,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY",
