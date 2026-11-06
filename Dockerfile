@@ -43,13 +43,13 @@ RUN \
     wget -O /opt/csd-installer.sh ${CSD_INSTALLER_URL} && chmod u+x /opt/csd-installer.sh; \
     /opt/csd-installer.sh --root /opt/ccdc -c --accept-licenses install uk.ac.cam.ccdc.data.csd
 
-# The CSD data directory (i.e., the contents of `ccdc-data/csd`) at the root of a stage.
+# The root of a CCDC installation, of which only `ccdc-data/csd` is used.
 # By default this is taken from the installer above, but it can be overridden with
-# an existing local CSD installation via a named build context, e.g.,
-#   docker build --build-context csd-data=/path/to/ccdc-data/csd ...
+# an existing local CCDC installation via a named build context, e.g.,
+#   docker build --build-context csd-data=/path/to/CCDC/root ...
 # in which case the installer stage is skipped entirely.
 FROM scratch AS csd-data
-COPY --from=csd-installer /opt/ccdc/ccdc-data/csd /
+COPY --from=csd-installer /opt/ccdc/ccdc-data/csd /ccdc-data/csd
 
 FROM base-packages AS compress-csd-data
 
@@ -57,7 +57,7 @@ FROM base-packages AS compress-csd-data
 # falling back to CSD_ACTIVATION_KEY if not provided (required when using a licence server)
 RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     --mount=type=secret,id=csd-encryption-key,env=CSD_ENCRYPTION_KEY \
-    --mount=type=bind,from=csd-data,target=/tmp/csd \
+    --mount=type=bind,from=csd-data,source=ccdc-data/csd,target=/tmp/csd \
     CSD_ENCRYPTION_KEY="${CSD_ENCRYPTION_KEY:-$CSD_ACTIVATION_KEY}" && \
     : "${CSD_ENCRYPTION_KEY:?One of CSD_ENCRYPTION_KEY or CSD_ACTIVATION_KEY must be provided}" && \
     tar -czf /opt/csd.tar.gz -C /tmp csd && \
@@ -145,8 +145,10 @@ RUN --mount=type=secret,id=csd-activation-key,env=CSD_ACTIVATION_KEY \
     rm -rf /root/.config/CCDC/ApplicationServices.ini && \
     rm -rf /opt/ccdc /opt/csd.tar.gz && \
     gzip -9 /opt/csd-optimade/data/csd-optimade.jsonl && \
-    gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --symmetric /opt/csd-optimade/data/csd-optimade.jsonl.gz && \
-    cp /opt/csd-optimade/data/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/csd-optimade.jsonl.gz.gpg
+    gpg --batch --passphrase "${CSD_ENCRYPTION_KEY}" --symmetric \
+      --output /opt/csd-optimade/csd-optimade.jsonl.gz.gpg /opt/csd-optimade/data/csd-optimade.jsonl.gz && \
+    # Remove the unencrypted ingested data so that it never persists in this layer
+    rm /opt/csd-optimade/data/csd-optimade.jsonl.gz
 
 
 FROM python-setup AS csd-ingester-test

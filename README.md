@@ -145,7 +145,7 @@ docker buildx bake csd-optimade-server
 docker run --env-file .env -p 5000:5000 ghcr.io/datalab-industries/csd-optimade-server
 ```
 
-Setting `CSD_DATA_DIR=/path/to/ccdc-data/csd` will similarly use an existing local CSD data directory instead of the installer.
+Setting `CSD_DATA_DIR` to the root of an existing local CCDC installation (i.e., the directory containing `ccdc-data/csd`) will similarly use its CSD data instead of the installer.
 
 ### Runtime configuration options
 
